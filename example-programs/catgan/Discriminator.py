@@ -1,6 +1,9 @@
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import Flatten
 
@@ -12,9 +15,13 @@ from tensorflow import zeros_like
 
 
 class Discriminator:
-    def __init__(self, learning_rate, beta_1, beta_2):
+    def __init__(self, learning_rate, beta_1=0.9, beta_2=0.999):
         self.cross_entropy = BinaryCrossentropy(from_logits=True)
-        self.optimizer = Adam(learning_rate=learning_rate)
+        self.optimizer = Adam(
+            learning_rate=learning_rate,
+            beta_1=beta_1,
+            beta_2=beta_2
+        )
         self.model = self.make_discriminator_model()
 
     def loss(self, real_output, fake_output):

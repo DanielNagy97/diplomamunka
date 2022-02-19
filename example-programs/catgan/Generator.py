@@ -11,10 +11,14 @@ from tensorflow import ones_like
 
 
 class Generator:
-    def __init__(self, latent_dim, learning_rate, beta_1, beta_2):
+    def __init__(self, latent_dim, learning_rate, beta_1=0.9, beta_2=0.999):
         self.latent_dim = latent_dim
         self.cross_entropy = BinaryCrossentropy(from_logits=True)
-        self.optimizer = Adam(learning_rate=learning_rate)
+        self.optimizer = Adam(
+            learning_rate=learning_rate,
+            beta_1=beta_1,
+            beta_2=beta_2
+        )
         self.model = self.make_generator_model(latent_dim)
 
     def loss(self, fake_output):
