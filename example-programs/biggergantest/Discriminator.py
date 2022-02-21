@@ -32,55 +32,55 @@ class Discriminator:
         total_loss = real_loss + fake_loss
         return total_loss
 
-def add_downsampling_unit(self, model, units):
-    model.add(
-        Conv2D(filters=units[0], kernel_size=(3, 3),
-            padding="same", activation="leaky_relu")
-    )
-    model.add(
-        Conv2D(filters=units[1], kernel_size=(3, 3),
-            padding="same", activation="leaky_relu")
-    )
-    model.add(AveragePooling2D())
+    def add_downsampling_unit(self, model, units):
+        model.add(
+            Conv2D(filters=units[0], kernel_size=(3, 3),
+                padding="same", activation="leaky_relu")
+        )
+        model.add(
+            Conv2D(filters=units[1], kernel_size=(3, 3),
+                padding="same", activation="leaky_relu")
+        )
+        model.add(AveragePooling2D())
 
-def make_discriminator_model(self):
-    model = Sequential()
-    
-    # out: 64x64x256
-    model.add(
-        Conv2D(filters=128, kernel_size=(3, 3),
-            input_shape=(128, 128, 3), padding="same",
-            activation="leaky_relu")
-    )
-    model.add(
-        Conv2D(filters=256, kernel_size=(3, 3),
-            padding="same", activation="leaky_relu")
-    )
-    model.add(AveragePooling2D())
-    
-    # out: 32x32x512
-    self.add_downsampling_unit(model, (256, 512))
-    
-    # out: 16x16x512
-    self.add_downsampling_unit(model, (512, 512))
-    
-    # out: 8x8x512
-    self.add_downsampling_unit(model, (512, 512))
-    
-    # out: 4x4x512
-    self.add_downsampling_unit(model, (512, 512))
-    
-    # out: last
-    model.add(
-        Conv2D(filters=512, kernel_size=(3, 3),
-            padding="same", activation="leaky_relu")
-    )
-    model.add(
-        Conv2D(filters=512, kernel_size=(4, 4), strides=4,
-            padding="same", activation="leaky_relu")
-    )
-    
-    model.add(Flatten())
-    model.add(Activation("sigmoid"))
+    def make_discriminator_model(self):
+        model = Sequential()
+        
+        # out: 64x64x256
+        model.add(
+            Conv2D(filters=128, kernel_size=(3, 3),
+                input_shape=(128, 128, 3), padding="same",
+                activation="leaky_relu")
+        )
+        model.add(
+            Conv2D(filters=256, kernel_size=(3, 3),
+                padding="same", activation="leaky_relu")
+        )
+        model.add(AveragePooling2D())
+        
+        # out: 32x32x512
+        self.add_downsampling_unit(model, (256, 512))
+        
+        # out: 16x16x512
+        self.add_downsampling_unit(model, (512, 512))
+        
+        # out: 8x8x512
+        self.add_downsampling_unit(model, (512, 512))
+        
+        # out: 4x4x512
+        self.add_downsampling_unit(model, (512, 512))
+        
+        # out: last
+        model.add(
+            Conv2D(filters=512, kernel_size=(3, 3),
+                padding="same", activation="leaky_relu")
+        )
+        model.add(
+            Conv2D(filters=512, kernel_size=(4, 4), strides=4,
+                padding="same", activation="leaky_relu")
+        )
+        
+        model.add(Flatten())
+        model.add(Activation("sigmoid"))
 
-    return model
+        return model
