@@ -2,6 +2,7 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2DTranspose
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.layers import UpSampling2D
 from tensorflow.keras.layers import Reshape
 from tensorflow.keras.layers import Activation
@@ -30,12 +31,16 @@ class Generator:
         model.add(UpSampling2D())
         model.add(
             Conv2D(filters=units[0], kernel_size=(3, 3),
-                padding='same', activation="leaky_relu")
+                padding='same')
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
         model.add(
             Conv2D(filters=units[1], kernel_size=(3, 3),
-                padding='same', activation="leaky_relu")
+                padding='same')
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
 
     def make_generator_model(self, latent_dim):
         model = Sequential()
@@ -44,13 +49,16 @@ class Generator:
         model.add(Reshape((1, 1, latent_dim), input_shape=[latent_dim]))
         model.add(
             Conv2DTranspose(filters=512, kernel_size=(4, 4),
-                            strides=(2, 2), padding="valid",
-                            activation="leaky_relu")
+                            strides=(2, 2), padding="valid")
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
         model.add(
             Conv2D(filters=512, kernel_size=(3, 3),
-                padding='same', activation="leaky_relu")
+                padding='same')
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
         assert model.output_shape == (None, 4, 4, 512)
         
         # out: 8x8x512

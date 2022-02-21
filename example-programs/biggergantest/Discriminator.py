@@ -3,8 +3,7 @@ from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import AveragePooling2D
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.layers import BatchNormalization
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import Flatten
 
@@ -35,12 +34,16 @@ class Discriminator:
     def add_downsampling_unit(self, model, units):
         model.add(
             Conv2D(filters=units[0], kernel_size=(3, 3),
-                padding="same", activation="leaky_relu")
+                padding="same")
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
         model.add(
             Conv2D(filters=units[1], kernel_size=(3, 3),
-                padding="same", activation="leaky_relu")
+                padding="same")
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
         model.add(AveragePooling2D())
 
     def make_discriminator_model(self):
@@ -49,13 +52,16 @@ class Discriminator:
         # out: 64x64x256
         model.add(
             Conv2D(filters=128, kernel_size=(3, 3),
-                input_shape=(128, 128, 3), padding="same",
-                activation="leaky_relu")
+                input_shape=(128, 128, 3), padding="same")
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
         model.add(
             Conv2D(filters=256, kernel_size=(3, 3),
-                padding="same", activation="leaky_relu")
+                padding="same")
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
         model.add(AveragePooling2D())
         
         # out: 32x32x512
@@ -73,8 +79,10 @@ class Discriminator:
         # out: last
         model.add(
             Conv2D(filters=512, kernel_size=(3, 3),
-                padding="same", activation="leaky_relu")
+                padding="same")
         )
+        model.add(BatchNormalization())
+        model.add(LeakyReLU())
         model.add(
             Conv2D(filters=512, kernel_size=(4, 4), strides=4,
                 padding="same", activation="leaky_relu")
