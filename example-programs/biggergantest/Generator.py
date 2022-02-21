@@ -73,14 +73,15 @@ class Generator:
         self.add_upsampling_unit(model, (512, 512))
         assert model.output_shape == (None, 32, 32, 512)
         
+        
         # out: 64x64x256
         self.add_upsampling_unit(model, (256, 256))
         assert model.output_shape == (None, 64, 64, 256)
-        
+        """
         # out: 128x128x128
         self.add_upsampling_unit(model, (128, 128))
         assert model.output_shape == (None, 128, 128, 128)
-        
+        """
 
         model.add(Conv2D(3, kernel_size=3, padding='same'))
         model.add(Activation("tanh"))

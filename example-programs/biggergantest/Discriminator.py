@@ -49,24 +49,25 @@ class Discriminator:
     def make_discriminator_model(self):
         model = Sequential()
         
-        # out: 64x64x256
+        # out: 32x32x512
         model.add(
-            Conv2D(filters=128, kernel_size=(3, 3),
-                input_shape=(128, 128, 3), padding="same")
+            Conv2D(filters=256, kernel_size=(3, 3),
+                input_shape=(64, 64, 3), padding="same")
         )
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(
-            Conv2D(filters=256, kernel_size=(3, 3),
+            Conv2D(filters=512, kernel_size=(3, 3),
                 padding="same")
         )
         model.add(BatchNormalization())
         model.add(LeakyReLU())
         model.add(AveragePooling2D())
         
+        """
         # out: 32x32x512
-        self.add_downsampling_unit(model, (256, 512))
-        
+        self.add_downsampling_unit(model, (512, 512))
+        """
         # out: 16x16x512
         self.add_downsampling_unit(model, (512, 512))
         
