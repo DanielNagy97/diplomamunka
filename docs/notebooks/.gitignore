@@ -1,1 +1,4 @@
 .ipynb_checkpoints
+/epochs
+/datas/afhq
+__pycache__
