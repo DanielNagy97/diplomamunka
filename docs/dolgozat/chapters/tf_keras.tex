@@ -1,0 +1,74 @@
+\Chapter{Tensorflow és Keras}
+
+A dolgozat programjának megvalósításához a TensorFlow függvénykönyvtárat választottam ki. A TensorFlow egy ingyenes, open-source gépi tanulásra használatos függvénykönyvtár, amelyet elsősorban mélytanulásos alkalmazások megvalósítására alkalmaznak. A könyvtárat a Google Brain fejlesztésében született meg.
+A Keras függvénykönyvtár egy interfészt biztosít a TensorFlowhoz. Segítségével igazán egyszerűen, modulárisan és átláthatóan állíthatunk össze neurális hálózatokat.
+
+TODO: Keras és Tenforflow 2 bemutatása, példákkal, ábrákkal
+
+\begin{python}
+import tensorflow as tf
+from tensorflow import keras
+\end{python}
+
+\Section{Modellek tanítása}
+
+A mély neurális hálózatok tanítása igazán erőforrásigényes feladat. A tanítható paraméterek nem ritkán milliós nagyságrendűek, a dataset-eknek pedig kellően nagynak kell lenniük, a feldolgozandó adatoknak a memóriába is bele kell férnie. Egy-egy iteráció igen sok időbe tellhet egy gyengébb hardveren.
+
+Az első demóprogramok futtatása során szembesültem az első nehézséggel: A laptopom nem a legalkalmasabb a modellek tanítására, hiszen igen sok időt vett igénybe a legkisebb példák futtatása is. Az interneten felleltem a Google Colab környezetet, amely ingyenes virtuális környezetet biztosít a python notebook-ok szerkesztéséhez és futtatásához, egy előre meghatározotlan ideig GPU-t (Tesla K80) és TPU-t is biztosít. Az ingyenes verzióban a napi GPU használatának limitje nincsen meghatározva, így egy idő után lekapcsolhatják és GPU nélkül megnövekszik a tanítás hossza. Az ingyenes verzióban a környezetet 12 óránként resetelik, így minden adat elvezhet, továbbá csak akkor futhat a script, ha meg van nyitva a böngészőablak. Természetesen a Tensorflow és a Keras ajánl lehetőségeket a modellek mentésére vagy a tanítás közbeni checkpoint-ok készítésére.
+
+Például az alábbi kód segítségével tetszőleges attribútumokkal létrehozhatunk egy checkpoint objektumot, amely segítségével mentéseket csinálhatunk a checkpointben meghatározott objektumok állapotairól. Amelyeket a tanítás folytatásához később be is tölthetünk.
+\begin{python}
+checkpoint = tf.train.Checkpoint(
+    generator_optimizer=generator_optimizer,
+    discriminator_optimizer=discriminator_optimizer,
+    generator=generator,
+    discriminator=discriminator
+)
+\end{python}
+
+Egy másik lehetőségként lementhetjük a teljes modellt, amelyet később egyszerűen be is tölthetünk.
+\begin{python}
+model.save("./my_model")
+
+new_model = keras.models.load_model("./my_model")
+\end{python}
+Viszont számomra a Google Colab ingyenes próbaverziója nem volt teljesen megfelelő, pont a kiszámíthatatlanság miatt. Magyaroroszágon jelenleg nem is lehet előfizetni még, így újabb felületet kellett keresnem. Egy fórumon böngészve találtam rá a Kaggle felületre, amely hasonló környezetet kínál, mint a Colab. Viszont jobb videókártyát biztosít, és a GPU használat heti szinten kerül meghatározásra órákban, ami csak a használat során számolódik. Továbbá lehetőséget kínál a notebookok ütemezett futtatására is és az oldalon megtalálható bármelyik datasetet könnyedén betölthetjük és használhatjuk. Mindezen előnyök miatt a Kaggle-t választottam a modelljeim tanítására.
+
+Az alábbi táblázatban található meg a laptopom és a Kaggle által biztosított környezet specifikációi:
+
+\begin{tabular}{ |p{1.2cm}||p{6cm}|p{6cm}|  }
+	\hline
+	  & Dell Insprion-5558 & Kaggle környezet\\
+	\hline
+	\textbf{CPU} & 4 x Intel(R) Core(TM) i3-5005U CPU @ 2.00GHz & 2 x Intel(R) Xeon(R) CPU @ 2.00GHz\\
+	\textbf{RAM} & 4 x 2x 4GB DDR3 1600 MHz & 15GB\\
+	\textbf{GPU} & Intel HD Graphics 5500 (VGA) & Nvidia Tesla P100-PCIE-16GB\\
+	\textbf{HDD} & 1TB & 73GB\\
+	\hline
+\end{tabular}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=15cm]{images/runtime.png}
+\caption{Runtime ábrs}
+\label{fig:runtime}
+\end{figure}
+
+
+
+A dolgozat terjedelme (a mellékletek nélkül számítva) diplomamunka esetén 60-90, szakdolgozat esetén 40-60 oldal között optimális.
+
+Az alábbi tagolás sorrendjének betartása nem kötelező, de az arányok lényegesek!
+\begin{enumerate}
+	\item Bevezető\\
+Feladat ismertetése, honnan jött az ötlet, kitőzött célok, követelmények, elvárások. (~ 2 oldal)
+	\item Irodalom feldolgozás, háttér információk (~ 10\%, de elméleti területen írt dolgozatok esetében ez akár 30\% is lehet)
+	\begin{itemize}
+		\item Ha cég megbízásából dolgozunk, ebben a részben lehet ismertetni a vállalatot. 
+		\item Elméleti háttér ismertetése, hivatkozva a felhasznált irodalomra. 
+	\end{itemize}
+	\item A feladat megoldásához rendelkezésre álló technikák, technológiák, fejlesztőeszközök ismertetése, összehasonlítása, (előnyök, hátrányok ütköztetése, felhasználhatóság mérlegelése). (~ 25\%)
+	\item Saját teljesítmény előállításához ténylegesen felhasznált eszközök részletes ismertetése; a kiválasztás szempontjai, telepítés, használatba vétel előfeltételei és lépései (ha azok nem magától értetődők). (~ 20\%)
+	\item Saját munkánk (alkalmazásfejlesztés, mérés, tervezés stb.) részletes leírása, az eredmények szemléletes ismertetése. (~ 35\%)
+	\item Összegzés\\ Tapasztalatok, eredmények összegzése; a feladat elkészítése során felmerült nehézségek, elkövetett hibák; jövőbeni fejlesztési lehetőségek. (~10\%)
+\end{enumerate}
