@@ -32,28 +32,60 @@ model.save("./my_model")
 
 new_model = keras.models.load_model("./my_model")
 \end{python}
-Viszont számomra a Google Colab ingyenes próbaverziója nem volt teljesen megfelelő, pont a kiszámíthatatlanság miatt. Magyaroroszágon jelenleg nem is lehet előfizetni még, így újabb felületet kellett keresnem. Egy fórumon böngészve találtam rá a Kaggle felületre, amely hasonló környezetet kínál, mint a Colab. Viszont jobb videókártyát biztosít, és a GPU használat heti szinten kerül meghatározásra órákban, ami csak a használat során számolódik. Továbbá lehetőséget kínál a notebookok ütemezett futtatására is és az oldalon megtalálható bármelyik datasetet könnyedén betölthetjük és használhatjuk. Mindezen előnyök miatt a Kaggle-t választottam a modelljeim tanítására.
+Viszont számomra a Google Colab ingyenes próbaverziója nem volt teljesen megfelelő, a kiszámíthatatlanság miatt. Magyaroroszágon jelenleg nem is lehet előfizetni, így újabb felületet kellett keresnem. Egy fórumon böngészve találtam rá a Kaggle felületre, amely hasonló környezetet kínál, mint a Colab. Viszont az általa biztosított virtuális környezet hardvere jobbnak bizonyult a Colab-ben használhatóaknál. A GPU használat heti szinten kerül meghatározásra órákban, ami csak a használat során számolódik. Továbbá lehetőséget kínál a notebookok ütemezett futtatására is és az Kaggle-ön megtalálható bármelyik datasetet könnyedén betölthetjük és használhatjuk. Mindezen előnyök miatt a Kaggle-t választottam a modelljeim tanítására.
 
 Az alábbi táblázatban található meg a laptopom és a Kaggle által biztosított környezet specifikációi:
-
-\begin{tabular}{ |p{1.2cm}||p{6cm}|p{6cm}|  }
-	\hline
+\begin{center}
+\begin{tabular}{ p{1.2cm}||p{6cm}|p{6cm}  }
 	  & Dell Insprion-5558 & Kaggle környezet\\
 	\hline
-	\textbf{CPU} & 4 x Intel(R) Core(TM) i3-5005U CPU @ 2.00GHz & 2 x Intel(R) Xeon(R) CPU @ 2.00GHz\\
-	\textbf{RAM} & 4 x 2x 4GB DDR3 1600 MHz & 15GB\\
+	\textbf{CPU} & 4x Intel(R) Core(TM) i3-5005U CPU @ 2.00GHz & 2x Intel(R) Xeon(R) CPU @ 2.00GHz\\
+	\textbf{RAM} & 2x 4GB DDR3 1600 MHz & 15GB\\
 	\textbf{GPU} & Intel HD Graphics 5500 (VGA) & Nvidia Tesla P100-PCIE-16GB\\
-	\textbf{HDD} & 1TB & 73GB\\
-	\hline
+	\textbf{HDD} & 1TB & 73GB
 \end{tabular}
+\end{center}
+A három környezet (laptop, Colab, Kaggle) teljesítményét egy általam felállított méréssel vizsgáltam.
+A \texttt{RuntimeMeasure.ipynb} notebook használatos a teljesítménymérés elvégzéséhez.
+A teljesítménymérés alapja egy olyan GAN hálózat, amelyet meghatározott paraméterekkel hozunk létre.
+A tanítás során az alábbi paraméterek változatlanok:
+\begin{center}
+\begin{tabular}{ c|c|c|c }
+	Látens dimenziószám & mini-batch méret & filterek száma & kernelméret\\
+	\hline
+	100 & 32 & 128 & ($3\times 3$)
+\end{tabular}
+\end{center}
+A felbontásnövelő rétegek száma a futó paraméter, amelyet 0-tól 3-ig vizsgálunk.
+A hálózat felépítése megegyezik a DCGAN architektúrával, azzal az eltéréssel, hogy a Generátor utolsó dekonvolúciós rétege helyett egy konvolúciós réteg található, amely csupán dimenziócsökkentési feladatot végez, vagyis a feature-öket a három színcsatornába transzformálja. Hasonlóan a Diszkriminátorban is, az első konvolúciós réteg a bemeneti kép csatornáit bővíti ki, nem végez kicsinyítést.
+A hálózatot 5 epoch-ig tanítjuk az adott felbontásnövelő rétegek mellett, majd az átlagos futásidő kerül lejegyzésre.
+A mérés során a hálózatot a Cifar10 \cite{krizhevsky2009learning} adathalmazon tanítottam, labelek nélkül a train részhalmazán, amely 50000 képet tartalmaz. Az adathalmaz képei ($32 \times 32$) felbontásúak és 3 színcsatornával rendelkeznek (rgb). Összesen 10 féle osztályba sorolhatjuk be az adathalmaz elemeit.
+A mérés egyes állomásain a generátor különféle felbontásokban generálja a képeket. Így a tanítás előtt a tanítóhalmaz képeit is a generátor kimenetével megegyező méretekre kell skáláznunk.
+
+A generátor kimenete a felbontásnövelő rétegek számával változik. Ha nem alkalmazunk ilyen réteget, akkor az ($4 \times 4$) felbontású képeket eredményez, majd rendre 1 réteg esetén ($8 \times 8$), 2 réteg esetén ($16 \times 16$) és 3 réteg esetén ($32 \times 32$) felbontású képek jelennek meg a generátor kimenetén. A diszkriminátort is ennek megfelelően át kell alakítanunk, ott viszont a felbontáscsökkentő rétegek számát kell módosítanunk. Mivel a felvázolt GAN szimmetrikus, így a felbontásnövelő és felbontáscsökkentő rétegek száma megegyezik.
+
+\begin{python}
+...
+for i in range(upsampling_layers):
+    hidden = keras.layers.Conv2DTranspose(
+        units_per_layer, kernel_size, 2, 'same'
+    )(hidden)
+    hidden = keras.layers.BatchNormalization()(hidden)
+    hidden = keras.layers.ReLU()(hidden)
+...
+\end{python}
+
+A generátorban és a diszkriminátorban is egy-egy for ciklussal megoldhatjuk az említett rétegek hozzáadását a hálók építése során. A fenti példa kód szemlélteti a generátorban lévő dekonvolúciós réteg hozzáadását.
+A notebookot futtatva a \ref{fig:runtime} ábrán látható eredmények jöttek ki.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=15cm]{images/runtime.png}
-\caption{Runtime ábrs}
+\caption{Runtime ábra}
 \label{fig:runtime}
 \end{figure}
 
+Mint látható, a laptopom igen alulmaradt a két virtuális környezettel szemben.
 
 
 A dolgozat terjedelme (a mellékletek nélkül számítva) diplomamunka esetén 60-90, szakdolgozat esetén 40-60 oldal között optimális.

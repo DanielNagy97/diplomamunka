@@ -1,6 +1,6 @@
 \Chapter{Deep Convolutional GAN példa}
 
-Ezen architektúra természetesen a mai eredmények mellett egyszerűnek tűnhet elsőre, viszont a későbbi, fejlettebb architektúrákban többségében megfigyelhető, hogy erre építkeztek. Természetesen az architektúra egy igen egyszerű kiegészítést kínált az eredeti GAN hálózatra: konvolúciós rétegeket alkalmaz a rejtett rétegekben mind a Generátor, mind a Diszkriminátor esetében. A konvolúciós rétegek segítségével a képeken lévő összefüggő pixelek kapcsolatairól pontosabb reprezentációt kaphatunk, így képek generálásához is hasznos lehet a módszer.
+Ezen architektúra természetesen a mai eredmények mellett egyszerűnek tűnhet elsőre, viszont a későbbi, fejlettebb architektúrákban többségében megfigyelhető, hogy ezen modellt vették alapul. Természetesen az architektúra egy igen egyszerű kiegészítést kínált az eredeti GAN hálózatra: konvolúciós rétegeket alkalmaz a rejtett rétegekben mind a Generátor, mind a Diszkriminátor esetében. A konvolúciós rétegek segítségével a képeken lévő összefüggő pixelek kapcsolatairól pontosabb reprezentációt kaphatunk, így képek generálásához is hasznos lehet a módszer.
 
 \begin{figure}[h]
 \centering
@@ -12,7 +12,7 @@ Ezen architektúra természetesen a mai eredmények mellett egyszerűnek tűnhet
 \Section{Generátor}
 
 Az osztályozáshoz használt konvolúciós hálókkal ellentétben a Generátorban a kisebb felbontás felől haladunk a nagyobb felbontásig.
-A generátor modellem első implementációjában Dekonvolúciós rétegeket alkalmaztam, amelyet Transzponált konvolúciós rétegnek is nevezhetünk. A Dekonvolúciós rétegek segítségével minden rejtett réteg kimenete egy nagyobb felbontású kép lesz, ellentétben a konvolúció működésével. Tehát a hálónak jelen esetben meg kell tanulnia a rétegekben az optimális felbontás-növelést. Előre megadott paraméterek a filterek darabszáma, a kernel mérete, a strides(?) és a padding. Ha a padding-ot "same"-re és ha a strides paramétert 2x2-esnek választjuk, úgy a réteg kimenetén megjelenő kép felbontása kétszerese lesz a bemeneti oldalon megfigyelhető képnek. A rejtett rétegekben kezdetben ReLU aktivációs függvényt használtam, a neuronok kezdő értékeit a He inicializációs technikával állítottam be (Hands on könyv ajánlása alapján).
+A generátor modellem első implementációjában \textit{Dekonvolúciós} rétegeket alkalmaztam, amelyet \textit{Transzponált konvolúciós} rétegnek is nevezhetünk. A dekonvolúció a konvolúció ellentetje, vagyis a feladata, hogy egy alacsonyabb dimenziójú reprezentációt magasabb dimenzióba emeljen. Segítségével minden rejtett réteg kimenete egy nagyobb felbontású kép lesz. Tehát a hálónak jelen esetben meg kell tanulnia a rétegekben az optimális felbontás-növelést. Előre megadott paraméterek a filterek darabszáma, a kernel mérete, a strides(?) és a padding. Ha a padding-ot "same"-re és ha a strides paramétert $2 \times 2$-esnek választjuk, úgy a réteg kimenetén megjelenő kép felbontása kétszerese lesz a bemeneti oldalon megfigyelhető képnek. A rejtett rétegekben kezdetben ReLU aktivációs függvényt használtam, a neuronok kezdő értékeit a He inicializációs technikával \cite{he2015delving} állítottam be.
 
 \begin{figure}[h]
 \centering
@@ -21,17 +21,42 @@ A generátor modellem első implementációjában Dekonvolúciós rétegeket alk
 \label{fig:relu}
 \end{figure}
 
-A tanításhoz célszerű a kép pixeleinek intenzitását normalizálni a [-1, 1] intervallumra. A Generátor is ebben az intervallumban fogja a képek pixeleit generálni a hiperbolikus tanges kimeneti aktivációs függvényéből adódóan. (tanh indoklás, sigmoid helyett..) A megjelenítéshez később természetesen denormalizálnunk kell a generált képek pixelértékeit a [0, 255] tartományra.
+A tanításhoz célszerű a kép pixeleinek intenzitását normalizálni a $[-1, 1]$ intervallumra lebegőpontos értékekre. A Generátor is ebben az intervallumban fogja a képek pixeleit generálni a hiperbolikus tanges kimeneti aktivációs függvényéből adódóan. (tanh indoklás, sigmoid helyett..) A megjelenítéshez később természetesen denormalizálnunk kell a generált képek pixelértékeit a $[0, 255]$ tartományra.
 
-A Generátor modell bemenetként az előre definiált látens tér dimenziójával megegyező dimenziójú zajt kap. Majd ezen bemeneti zaj segítségével állítja össze a megfelelő kimeneti képet. A tanulás során tehát a látens tér tartományaihoz rendeli a tanult jellegzetességeket és a látens teret mintavételezve dekódolható a Generátor segítségével a ponthoz tartozó kép.
+A Generátor modell bemenetként az előre definiált látens tér dimenziójával megegyező dimenziójú zajt kap, vagyis annak a $z_n$ dimenziószámú térnek egy pontját. Majd ezen bemeneti zaj segítségével állítja össze a megfelelő kimeneti képet. A tanulás során tehát a látens tér tartományaihoz rendeli a tanult jellegzetességeket és a látens teret mintavételezve dekódolható a Generátor segítségével a ponthoz tartozó kép.
 
-A bemeneti zaj egy Reshape rétegen megy keresztül, amelyben a látens tér dimenziószámát átformázza egy 1x1xLdim dimenziójú mátrixá. Ezen réteg kimenetével a későbbi dekonvolúciós rétegek már tudnak dolgozni.
-Ezután az első dekonvolúciós rétegen megy át a kapott mátrix, amely 512 darab filtert tartalmaz, 4x4-es kernelméretekkle dolgozik és 'valid' paddingot használ. Az aktivációs függvénye ReLU a már említett He inicializálással. Ezen lépés arra szolgál, hogy a látens térből előállítson egy 4x4x512-es tensort, amely az első, legkisebb felbontású képünknek tekinthetjük ebben az esetben, ahol a színcsatornák száma 512 és a felbontása 4x4.
+A bemeneti zaj egy \textit{Reshape} rétegen megy keresztül, amelyben a látens tér dimenziószámát átformázza egy $1 \times 1 \times z_n$ dimenziójú mátrixá. Ezen réteg kimenetével a későbbi dekonvolúciós rétegek már tudnak dolgozni.
+Ezután az első dekonvolúciós rétegen megy át a kapott mátrix, amely 512 darab filtert tartalmaz, $4 \times 4$-es kernelméretekkel dolgozik és 'valid' paddingot használ. Az aktivációs függvénye ReLU a már említett He inicializálással. Ezen lépés arra szolgál, hogy a látens térből előállítson egy $4 \times 4 \times 512$ alakú tensort, amely az első, legkisebb felbontású képünknek tekinthetjük ebben az esetben, ahol a színcsatornák száma 512 és a felbontása pedig $4 \times 4$.
 
-A Generátorban ezután 2x2-es stride értékeket használva a kívánt felbontásig dekonvolúciós rétegeken keresztül növekszik a felbontás. A kernel méretét a rétegekben egységesen 4x4-ra állítottam be, a paddig 'same' és a strides a már említett 2x2-es. Az aktivációs függvény szintén ReLU. A rétegekben haladva a filterek darabszáma pedig feleződik. A filterek optimális számára csupán csak empirikus eredményeket találtam. Az utolsó dekonvolúciós réteg 3 darab filterrel rendelkezik.
+A Generátorban ezután $2 \times 2$-es stride értékeket használva same padding-gel a kívánt felbontásig dekonvolúciós rétegeken keresztül növekszik a felbontás. A kernelméretét a rétegekben egységesen $4 \times 4$-ra állítottam be. Az aktivációs függvény szintén ReLU. A rétegekben haladva a filterek darabszáma pedig feleződik. A filterek optimális számára csupán csak empirikus eredményeket találtam, így a paraméterek száma viszonlag alacsonyabban tartható és a tanítás ideje is lecsökken.
 
-A kimeneti képnek olyan tulajdonságokkal kell rendelkeznie, mint a tanítómintában szeplő képeknek. Például ha a tanítóminta színes képekből áll, rgb színkeveréssel, vagyis három színcsatornával, úgy a Generátor kimenetén is ilyen képekre van szükségünk. Mivel az említett dekonvolúciós rétegek több mint 3 színcsatornával dolgoztak, a megjeleníthetőség miatt szükséges tehát az utolsó dekonvolúciós rétegben a 3 darab filter.
-Végül a hiperbolikus tangens aktivációs függvény hatására az eredményeket a [-1, 1] intervallumba transzformálja.
+A kimeneti képnek olyan tulajdonságokkal kell rendelkeznie, mint a tanítómintában szeplő képeknek. Például ha a tanítóminta színes képekből áll, rgb színkeveréssel, vagyis három színcsatornával, úgy a Generátor kimenetén is ilyen képekre van szükségünk. Mivel az említett dekonvolúciós rétegek több mint 3 színcsatornával dolgoztak, a megjeleníthetőség miatt szükséges tehát az utolsó dekonvolúciós rétegben a 3 darab filter, amely egyaránt transzponálja az előző réteg reprezentációit az egyel magasabb felbontás értékbe, és a csatornák számát pedig 3-ra állítja.
+Egyes GAN architektúrákban ez az utolsó réteg csupán a 3 színcsatornába vetítést végzi el konvolúciós réteggel és szokás \textit{to RGB} rétegnek is nevezni \cite{karras2017progressive, karras2019style, karnewar2020msg}. Viszont jelen esetben egyúttal a felbontást is növeli a példámban szereplő utolsó réteg, ha $1 \times 1$-es stride értékkel rendelkezne ez a dekonvolúciós réteg, akkor valójában úgy működne mint egy konvolúciós réteg és tényleg csak a csatornák számát változtatná meg. Viszont akkor szükség lenne még egy felbontásnövelő rétegre, amely tovább növelné a paraméterek számát.
+
+Végül a hiperbolikus tangens aktivációs függvény hatására az eredményeket a $[-1, 1]$ intervallumba transzformálja.
+
+Az alábbi kódrészletben látható a felvázolt generátor architektúra megvalósítása a keras \textit{Sequential API}-ja segítségével.
+
+\begin{python}
+generator = keras.Sequential([
+    keras.layers.Reshape((1, 1, 100), input_shape=[100]),
+    keras.layers.Conv2DTranspose(512, (4, 4), (1, 1), 'valid',
+                                 activation="relu",
+                                 kernel_initializer="he_normal"),
+    keras.layers.Conv2DTranspose(256, (4, 4), (2, 2), 'same',
+                                 activation="relu",
+                                 kernel_initializer="he_normal"),
+    keras.layers.Conv2DTranspose(128, (4, 4), (2, 2), 'same',
+                                 activation="relu",
+                                 kernel_initializer="he_normal"),
+    keras.layers.Conv2DTranspose(64, (4, 4), (2, 2), 'same',
+                                 activation="relu",
+                                 kernel_initializer="he_normal"),
+    keras.layers.Conv2DTranspose(3, (4, 4), (2, 2), 'same',
+                                 activation="relu"),
+    keras.layers.Activation("tanh")
+])
+\end{python}
 
 \begin{figure}[h]
 \centering
@@ -40,74 +65,37 @@ Végül a hiperbolikus tangens aktivációs függvény hatására az eredmények
 \label{fig:tanh}
 \end{figure}
 
-\begin{python}
-def add_upsampling_unit(model,
-                        filters, kernel_size, strides, padding):
-    model.add(
-        Conv2DTranspose(
-            filters=filters, kernel_size=kernel_size,
-            strides=strides,
-            padding=padding, activation="relu",
-            kernel_initializer="he_normal"
-        )
-    )
-    
-def make_generator_model(latent_dim):
-    model = Sequential()
-    model.add(Reshape((1, 1, 100), input_shape=[latent_dim]))
-    add_upsampling_unit(model, 512, 4, (1, 1), 'valid')
-    add_upsampling_unit(model, 256, 4, (2, 2), 'same')
-    add_upsampling_unit(model, 128, 4, (2, 2), 'same')
-    add_upsampling_unit(model, 64, 4, (2, 2), 'same')
-    model.add(Conv2DTranspose(filters=3, kernel_size=4,
-                              strides=(2, 2), padding='same'))
-    model.add(Activation("tanh"))
-    return model
-\end{python}
-
 \Section{Diszkriminátor}
 
-A Diszkriminátor modell lényegében egy bináris osztályozó, amely eldönti, hogy a bemenetül kapott kép valódi vagy hamis. A bemeneti kép konvolúciós rétegeken megy végig, majd a kimeneti rétegen sigmoid aktivációs függvény segítségével hozza meg a döntést. A konvolúciós rétegek segítségével a modell fel tudja tárni a képeken található jellegzetességeket. A képen található mintázatokat filterek segítségével tanulja meg, amelyek megadott kernelméretekben pásztázzák végig a bemenetet. Így az egyes konvolúciósrétegek kimeneteként egy olyan reprezentáció jön létre a bemeneti képről, amelyben érvényesülnek a pixeleket körülölelő további pixelek kapcsolatai is. Ezáltal a kimeneti aktivációs függvény előtti réteg, a szerializáció (Flattening) kevésbé fogja a kép tartalmára vonatkozó információt rontani. Mivel a tanítóminta képeinek pixelértékeit normalizáltuk a [-1, 1] intervallumra, így a diszkriminátor a bemenetén is ilyen tulajdonságú képeket vár. A Diszkriminátor felépítésben hasonlít a Generátorhoz, lényegében annak tükörképeként képzelhetjük el. Viszont a dekonvolúciós rétegek helyett konvolúciós rétegeket alkalmazunk benne.
+A Diszkriminátor modell lényegében egy bináris osztályozó, amely eldönti, hogy a bemenetül kapott kép valódi-e vagy hamis. A bemeneti kép konvolúciós rétegeken megy végig, kinyerve a jellegzetességeket és felállítva egy olyan belső reprezentációt, amely alapján az utolsó \textit{dense} réteg megfelelő kimenettel tud rendelkezni. A képen található mintázatokat a konvolúciós rétegek filterek segítségével tanulja meg, amelyek megadott kernelméretekben pásztázzák végig a bemenetet. Így az egyes konvolúciósrétegek kimeneteként egy olyan reprezentáció jön létre a bemeneti képről, amelyben érvényesülnek a pixeleket körülölelő további pixelek kapcsolatai is. Ezáltal az utolsó előtti réteg, a szerializáció (\textit{Flattening}) kevésbé fogja a kép tartalmára vonatkozó információt rontani. Mivel a tanítóminta képeinek pixelértékeit normalizáltuk a $[-1, 1]$ intervallumra, így a diszkriminátor a bemenetén is ilyen tulajdonságú képeket vár. A Diszkriminátor felépítésben hasonlít a Generátorhoz, lényegében annak tükörképeként képzelhetjük el. Viszont a dekonvolúciós rétegek helyett konvolúciós rétegeket alkalmazunk benne a jellegzetességek kinyerésére. Majd ha eljutunk a kívánt dimenziószámig, egy teljesen összekötött rétegben hozza meg a modell a döntést.
 
+A generátorhoz hasonlóan az alábbi kódrészlet bemutatja a felvázolt diszkriminátor keras Sequential API-val történő megvalósítását:
 \begin{python}
-def add_downsampling_unit(model, filters,
-                          kernel_size, strides, padding):
-    model.add(
-        Conv2D(
-            filters=filters, kernel_size=kernel_size,
-            strides=strides, padding=padding, activation="relu",
-            kernel_initializer="he_normal"
-        )
-    )
-
-def make_discriminator_model():
-    model = Sequential()
-    model.add(
-        Conv2D(
-            filters=64, kernel_size=4, strides=2,
-            input_shape=(64, 64, 3),
-            padding="same", activation="relu",
-            kernel_initializer="he_normal"
-        )
-    )
-    add_downsampling_unit(model, filters=128,
-                          kernel_size=4, strides=2, padding="same")
-    add_downsampling_unit(model, filters=256,
-                          kernel_size=4, strides=2, padding="same")
-    add_downsampling_unit(model, filters=512,
-                          kernel_size=4, strides=2, padding="same")
-    model.add(
-        Conv2D(
-            filters=100, kernel_size=4, strides=1, padding="valid",
-            activation="relu"
-        )
-    )
-    model.add(Flatten())
-    model.add(Dense(1))
-    return model
+discriminator = keras.Sequential([
+    keras.layers.Conv2D(64, (4, 4), (2, 2), "same",
+                        input_shape=(64, 64, 3), activation="relu",
+                        kernel_initializer="he_normal"),
+    keras.layers.Conv2D(128, (4, 4), (2, 2), "same", activation="relu",
+                        kernel_initializer="he_normal"),
+    keras.layers.Conv2D(256, (4, 4), (2, 2), "same", activation="relu",
+                        kernel_initializer="he_normal"),
+    keras.layers.Conv2D(512, (4, 4), (2, 2), "same", activation="relu",
+                        kernel_initializer="he_normal"),
+    keras.layers.Conv2D(100, (4, 4), (1, 1), "valid", activation="relu"),
+    keras.layers.Flatten(),
+    keras.layers.Dense(1)
+])
 \end{python}
 
-\begin{tabular}{ |p{6cm}||p{4cm}|p{3cm}|  }
+Mint a kódrészletből is látható, az utolsó teljesen összekötött rétegnek nincsen aktivációs függvénye. A sigmoid függvényt a keresztentrópia számolásnál alkalmazzuk majd a dense réteg kimenetére, amely megkönnyíti a tanítást. (??)
+
+Az alábbi tábláztokban összefoglalom az architektúra felépítését:
+\begin{center}
+
+\begin{tabular}{c c}
+
+\scriptsize{
+\begin{tabular}{ |p{1.7cm}|p{1.5cm}|p{1.6cm}| }
 	\hline
 	\multicolumn{3}{|c|}{\textbf{Generátor}} \\
 	\hline
@@ -115,38 +103,42 @@ def make_discriminator_model():
 	\hline
 	Input & - & (100)\\
 	Reshape & - & (1, 1, 100)\\
-	(4x4) ConvT, (1x1) stride, valid & ReLU & (4, 4, 512)\\
-	(4x4) ConvT, (2x2) stride, same & ReLU & (8, 8, 256)\\
-	(4x4) ConvT, (2x2) stride, same & ReLU & (16, 16, 128)\\
-	(4x4) ConvT, (2x2) stride, same & ReLU & (32, 32, 64)\\
-	(4x4) ConvT, (2x2) stride, same & tanh & (64, 64, 3)\\
+	(4x4) ConvT & ReLU & (4, 4, 512)\\
+	(4x4) ConvT & ReLU & (8, 8, 256)\\
+	(4x4) ConvT & ReLU & (16, 16, 128)\\
+	(4x4) ConvT & ReLU & (32, 32, 64)\\
+	(4x4) ConvT & tanh & (64, 64, 3)\\
 	\hline
 	\multicolumn{3}{|r|}{Paraméterek száma: \textbf{3.5 millió}} \\
 	\hline
-\end{tabular}
+\end{tabular}}
 
-
-\begin{tabular}{ |p{6cm}||p{4cm}|p{3cm}|  }
+&\scriptsize{
+\begin{tabular}{ |p{1.7cm}|p{1.5cm}|p{1.6cm}| }
 	\hline
 	\multicolumn{3}{|c|}{\textbf{Diszkriminátor}} \\
 	\hline
 	Réteg & Aktivációs függvény & Kiement alakja\\
 	\hline
 	Input & - & (64, 64, 3)\\
-	(4x4) Conv, (2x2) stride, same & ReLU & (32, 32, 64)\\
-	(4x4) Conv, (2x2) stride, same & ReLU & (16, 16, 128)\\
-	(4x4) Conv, (2x2) stride, same & ReLU & (8, 8, 256)\\
-	(4x4) Conv, (2x2) stride, same & ReLU & (4, 4, 512)\\
-	(4x4) Conv, (1x1) stride, valid & ReLU & (1, 1, 100)\\
+	(4x4)Conv & ReLU & (32, 32, 64)\\
+	(4x4)Conv & ReLU & (16, 16, 128)\\
+	(4x4)Conv & ReLU & (8, 8, 256)\\
+	(4x4)Conv & ReLU & (4, 4, 512)\\
+	(4x4)Conv & ReLU & (1, 1, 100)\\
 	Flatten & - & (100)\\
 	Dense(1) & - & (1)\\
 	\hline
 	\multicolumn{3}{|r|}{Paraméterek száma: \textbf{3.5 millió}} \\
 	\hline
+\end{tabular}}
+
 \end{tabular}
+\end{center}
 
 \Section{Tanítás, mérések}
-A felvázolt architektúrát tanítva a hibaértékek a következő ábrához hasonlóan alakulnak:
+
+A felvázolt architektúrát az Adam optimalizációs módszerrel, 0.0004 \textit{learning rate} hiperparaméter mellett tanítva a hibaértékek a következő ábrához hasonlóan alakulnak:
 
 \begin{figure}[h]
 \centering
@@ -155,10 +147,9 @@ A felvázolt architektúrát tanítva a hibaértékek a következő ábrához ha
 \label{fig:mini-batch_loss_plot}
 \end{figure}
 
-A modell tanítása nehézkes lehet, ezt kívánom szemléltetni a fenti ábrákkal.
-Jól látható, hogy a tanítási folyamat során igen érdekes hibaértékek születnek. Egy tanítási lépés egy minibatch-on történő tanítást jelent, egy epoch pedig az összes minibatch-on való tanítást jelenti.
-Ha csak a nyers hibaértékre tekintünk, akkor azt figyelhetjük meg, hogy a tanítási lépések között erősen oszcillálnak az értékek. Kijelenthetjük a látott eredmények alapján, hogy a tanítás valóban nem stabil és egészen random módon változhatnak az értékek.
-A szemléltetés kedvéért a következő ábrán a minibatchokon számolt hibaértékek átlagait figyelhetjük meg epoch-onként.
+Egy tanítási lépés egy mini-batch-on történő tanítást jelent, egy epoch pedig az összes mini-batch-on való tanítást jelenti.
+Ha csak a nyers hibaértékre tekintünk, akkor azt figyelhetjük meg, hogy a tanítási lépések között erősen oszcillálnak az értékek. Kijelenthetjük a látott eredmények alapján, hogy a tanítás valóban nem stabil és látszólag egészen random módon változhatnak az értékek.
+A szemléltetés kedvéért a következő ábrán a mini-batchokon számolt hibaértékek átlagait figyelhetjük meg epoch-onként.
 
 \begin{figure}[h]
 \centering
@@ -168,9 +159,9 @@ A szemléltetés kedvéért a következő ábrán a minibatchokon számolt hiba�
 \end{figure}
 
 Így finomabb görbéket kapunk, viszont erősen torzít az ábra, hiszen a GAN tanítási folyamata nem ilyen rendezett, mint ahogyan az első ábrán is láthattuk.
-A hibaértékek változását vizsgálva megfigyelhető a versengés, vagyis hogy a két hálózat hibái mennyire ellentétesen mozognak az epoch-ok alatt. Mivel a tanulás során függőség van a két hálózat között, így ha a diszkriminátor egy vizsgált epoch alatt rosszabbul teljesítene a korábbi eredményekhez képest, akkor a generátor hibaértéke alacsonyabb lesz és fordítva. A generátor hibái többszörösek lehetnek a diszkriminátor hibáinak, de ez a jelenség teljesen természetes, hiszen a generátor lényegében a másik hálózat hibáiból tud csak tanulni, hiszen a tanulás során nem látja a tanítóminta elemeit. A generátorban megfigyelhető, egyre növekvő hibaérték ellenére a generált képek minősége és részletezettsége is növekedni fog.
+A hibaértékek változását vizsgálva megfigyelhető a versengés, vagyis hogy a két hálózat hibái mennyire ellentétesen mozognak az epoch-ok alatt. Mivel a tanulás során függőség van a két hálózat között, így ha a diszkriminátor egy vizsgált epoch alatt rosszabbul teljesítene a korábbi eredményekhez képest, akkor az a generátor javára válik és annak hibaértéke alacsonyabb lesz és fordítva. A generátor hibái többszörösek lehetnek a diszkriminátor hibáinak, de ez a jelenség teljesen természetes, hiszen a generátor lényegében a másik hálózat hibáiból tud csak tanulni, mivel a tanulás során nem látja a tanítóminta elemeit. A generátorban megfigyelhető, egyre növekvő hibaérték ellenére a generált képek minősége és részletezettsége is növekedni fog.
 
-A hibaértékekből nem vonhatunk le pontos következtetéseket, így a fenti ábrák csupán szemléltetésképp készültek el. A GAN teljesítményének mérésére egyéb ajánlások jelentek meg. (Amelyeket szerintem egy külön fejezetben kéne összefoglalnom...)
+A hibaértékekből nem vonhatunk le pontos következtetéseket, így a fenti ábrák csupán szemléltetésképp készültek el. A GAN teljesítményének mérésére egyéb ajánlások jelentek meg, ilyen az Inception Score \cite{salimans2016improved} és az Fréchet Inception Distance \cite{heusel2017gans}.
 
 \Section{Az architektúra gyengeségei, problémái}
 
@@ -218,4 +209,16 @@ def add_upsampling_unit(model,
 \includegraphics[width=13cm]{images/deconv-vs-conv_upsmpl.png}
 \caption{Tanítás előtti Generátor kimenetei}
 \label{fig:deconv-vs-conv_upsmpl}
+\end{figure}
+
+
+\Section{Tanítás címkékkel}
+
+A GAN alap esetben minták rendezetlen halmazán tanul. Viszont a legtöbb adathalmaz annotációkkal van ellátva, amelyeket nem veszünk figyelembe a tanítás során és a modellre bízzuk, hogy megtanulja reprezentálni a tanítóhalmaz különféle objektumait. Ha szempont, hogy a GAN különféle osztályokra tudjon képeket generálni, akkor használhatjuk a Class Conditioning technikát \cite{mirza2014conditional}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=13cm]{images/label_conditioning.png}
+\caption{Tanítás előtti Generátor kimenetei}
+\label{fig:labelconditioning}
 \end{figure}

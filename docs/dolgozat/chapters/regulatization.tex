@@ -3,9 +3,7 @@
 A Mode collapse jelenség alatt a tanulás során bekövetkező anomáliát értjük, amely hatására a Generátor a látens tér bármely pontjára ugyanolyan kimeneti képet generál. A képek között minimális változatosság ugyan megfigyelhető, ugyanakkor az is látható, hogy a képeken igen hasonló formák jelennek meg.
 
 Ez a jelenség valójában tekinthető egyfajta overfitting-nek is, vagyis túltanulásnak. Viszont a mode-collapse elnevezés találóbb, hiszen amikor ez bekövetkezik, akkor a további tanítási lépések során úgy tűnhet, hogy stablian tűnő modell hirtelen összeomlott volna.
-A mode-collapse fellépése esetén a model további tanítása során minden egyes epoch-al változik a mode, vagyis az előzőtől eltérő kép jelenik meg a kimeneten (szintén minden egyes mintavételezett pontra hasonló). Mivel a diszkriminátor a mini-batch minden egyes bemenetét egymástól függetlenül dolgozza fel, így a gradienseiben sem jelenik meg olyan információ, amely a generátort változatosabb képek generálására bíztatná. A mode collapse esetén a diszkriminátor egyetlen pontot képes csak valódi adatnak tekinteni, majd minden egyes frissítéssel a pont elmozdul, ezzel magyarázható, hogy az összeomlás után tanítva minden egyes iterációval változik a "mode".
-(salimans2016improved)
-Vagyis a GAN modellünk használhatatlanná válik.
+A mode-collapse fellépése esetén a model további tanítása során minden egyes epoch-al változik a mode, vagyis az előzőtől eltérő kép jelenik meg a kimeneten (szintén minden egyes mintavételezett pontra hasonló). Mivel a diszkriminátor a mini-batch minden egyes bemenetét egymástól függetlenül dolgozza fel, így a gradienseiben sem jelenik meg olyan információ, amely a generátort változatosabb képek generálására bíztatná. A mode collapse esetén a diszkriminátor egyetlen pontot képes csak valódi adatnak tekinteni, majd minden egyes frissítéssel a pont elmozdul, ezzel magyarázható, hogy az összeomlás után tanítva minden egyes iterációval változik ezen pont, amire \textit{mode}-ként szokás hivatkozni \cite{salimans2016improved} Vagyis a GAN modellünk használhatatlanná válik.
 
 "Helvetica scenario"
 
@@ -18,7 +16,7 @@ Vagyis a GAN modellünk használhatatlanná válik.
 
 A tanítás közben felléphetnek lokális mode-collapse-ok is, amelyek a látens-tér egyes tartományaiban alakulhat ki (Stackgan2-ben vizsgálták ezt).
 
-Egyes cikkekben az összeomlásig tanítják a felvázolt modelleket és az összeomlás előtti állapotokra állítják vissza a hálózat súlyait a használathoz (BigGAN csinált ilyet, meg még más is, de meg kell keresnem.).
+Egyes cikkekben az összeomlásig tanítják a felvázolt modelleket és az összeomlás előtti állapotokra állítják vissza a hálózat súlyait a használathoz \cite{brock2018large}
 
 TODO: Mode collapse okok pontosabb leírása, detektálási technikák megnézése
 
@@ -49,12 +47,10 @@ A backpropagation stádiumában az output rétegtől haladunk az input felé, am
 Az olyan hálózatoknál, amelyekben több rejtett réteg is található, az instabil gradiensek jelensége még inkább érvényesül. A backpropagation során az input réteg felé haladva a gradiensek hajlamosak lehetnek igen kis értékekre zsugorodni. Ilyen esetben az alacsonyabb rétegek rendszerint lassabban fognak tanulni, amely szintén komoly problémát jelent.
 A hálózat rétegeiben megtalálható neuronok az előző rétegek neuronjaitól függenek, illetve a kimenetük a következő réteg neuronjait is befolyásolja. Egy esetlegesen fellépő túl magas vagy túl alacsony kilengés a kimeneti értékekben komoly hatással lehet a teljes hálózatra.
 
-TODO: Mátrix-szorzás, forward és backpropagation formális leírása szépen.
-
 Az instabil gradiensek megelőzésére az egyik irány a neuronok inicializációs stratégiájának megválasztása.
 Az évek során több ajánlás is érkezett, a különböző felépítésű hálózatokra különböző technikák váltak be.
 
-Kiemelnék két inicializációs technikát, a Glorot és a He stratégiákat, amelyek széleskörűen alkalmazhatónak bizonyultak.
+Kiemelnék két inicializációs technikát, a Glorot \cite{glorot2010understanding} és a He \cite{he2015delving} stratégiákat, amelyek széleskörűen alkalmazhatónak bizonyultak.
 A kezdőértékek generálásához figyelembe veszik a rétegek be- és kimeneti kapcsolatainak számát is, amelyet $fan_{in}$ és $fan_{out}$-nak is nevezhetünk és azok átlagát használják fel a számoláshoz.
 
 $$fan_{avg} = \frac{fan_{in} + fan_{out}}{2}$$
@@ -72,7 +68,6 @@ $$ \mathcal{U}\left[-r, r\right] $$
 
 Ezen inicializációs stratégia a tangens-hiperbolikusz, logisztikus és szoftmax aktivációs függvényekkel rendelkező rétegekben használatosak. 
 
-
 A \textbf{He/Kaiming} inicializáció hasonló megközelítést alkalmaz,
 Normális eloszlásra:
 
@@ -86,21 +81,18 @@ $$ \mathcal{U}\left[-r, r\right] $$
 
 Ezen inicializációs stratégia pedig a ReLU aktivációs függvénnyek családjával rendelkező rétegekben ajánlott használni.
 
-
 A Keras a Glorot inicializálást használja alapértelmezetten.
-
 
 TODO: Egyszerű példákkal szemléltetve az eredményeket.
 
 
 \Section{Batch Normalization}
-
 Az instabil gradiensek problémája a tanítás során is jelentkezhet, a megfelelő inicializációs stratégia nem garantálja a teljes stabilitást, csupán egy kezdeti optimális állapotot biztosít a modellnek.
 Az input adatok standardizálása áll a Batch Normalization technika mögött, amelyet a rétegek között vagy a rétegek aktivációs függvénye előtt ajánlott megtenni. A Batch Normalization technika alkalmazásához tehát minimálisan módosítanunk kell a meglévő modelljeink architektúráját. Viszont úgy figyeltem meg, hogy ezen technika alkalmazása teljesen empirikus módon történik és nincsen egy általánosan elfogadott módszer arra sem, hogy pontosan hol kell elhelyezni a réteget (az aktivációs függvények előtt vagy után vagy mindkét helyen bigGAN esetében mindenhova rakták, a többit meg kell néznem). A GAN esetében a kezdeti próbálkozásban csupán a diszkriminátorban (tényleg így van?) helyezték el a rétegeket (melyik cikkekben láttam ezt?), majd a generátorban is alkalmazásra került. Kétségtelen, hogy a technika alkalmazásával stabilabb tanítást eredményez és széleskörűen alkalmazható a mély neurális hálózatokban.
 
 A Batch Normalization technika zero-centerezi és normalizálja az inputokat, majd skálázza és shifteli az eredményeket. Vagyis két tanulható paramétervektor jelenik meg rétegenként a modellünkben, a skálázásra és shiftelés műveletre. A technika neve a mini-batch tanítási stratégiából adódik, vagyis amikor egy tanítási lépést nem a teljes dataset-re hajtunk végre, csupán egy annak kisebb szeletére. A Batch Normalization zero-centerező és normalizáló lépéséhez az algoritmusnak meg kell becsülnie az aktuális bemeneti mini-batch várható értékét és szórását. Ezt a becslést csupán tanítási időben tudja megtenni az algoritmus, hiszen olyankor rendelkezésére áll a teljes mini-batch. Viszont tesztelésnél, amikor csupán egy-egy tesztadatot lát a modell, úgy nem hagyatkozhatunk a becsült várhatóértékre és szórásra. A Keras-ban található implementáció a tanulás során mozgóátlaggal vezeti a várhatóértékeket és a szórásokat. Ez további két paramétert jelent, amelyeket a modell a tanulási folyamat során fog meghatározni a már említett módon, viszont a backpropagation során nem kerülnek finomhangolásra, csupán tesztidőben kerülnek felhasználásra ezek az értékek.
 
-Az algoritmus működése a következőképpen írható fel a hands-on könyv alapján saját jelölésekhez igazítva:
+Az algoritmus működése a következőképpen írható fel \cite{geron2019hands}:
 
 Legyen $m$ a minibatch elemszáma $m \in \mathbb{N}, 0 > m \ge n$, ahol $n$ a dataset elemszáma
 
@@ -123,6 +115,7 @@ Az algoritmus kimenete a $z_i$.
 (sok GAN architektúrában megfigyelhető (melyek azok?) de pl a ProGAN ehelyett Pixelwise-normalization-t használ a generátorban)
 
 \Section{Spectral Normalization}
+\cite{miyato2018spectral}
 (Ennek használata megengedi a nagyobb minibatch-méret használatát, hogy minél változatosabb képeket tudjon generálni a generátor. ennek utána kell néznem, hogy pontosan hogyan működik)
 
 - Lipschitz constant az egyetlen hyper-paraméter
@@ -177,7 +170,7 @@ De a cikkben a feature matching-et jobbnak találták, viszont a későbbiekben 
 
 \Section{Two Time-Scale Update Rule (TTUR)}
 Ezen technikát szintén meg lehet valósítani architektúrális változtatás nélkül, csupán az Adam optimalizáló eljárás egyik paraméterét kell megfelelően beállítani az implementációjához.
-Heusel et al. cikkjében mérésekkel alátámaztották, hogy ha az Adam optimalizáló módszert választjuk a GAN tanításához és a learning rate paramétert a generatároban és a diszkriminátorban különbözőre állítjuk, úgy a modell gyorsabban és stabilabban fog konvergálni a lokális optimumokhoz.
+Heusel et al. \cite{heusel2017gans} cikkjében mérésekkel alátámaztották, hogy ha az Adam optimalizáló módszert választjuk a GAN tanításához és a learning rate paramétert a generatároban és a diszkriminátorban különbözőre állítjuk, úgy a modell gyorsabban és stabilabban fog konvergálni a lokális optimumokhoz.
 
 0.0001
 
