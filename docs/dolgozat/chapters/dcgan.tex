@@ -210,15 +210,3 @@ def add_upsampling_unit(model,
 \caption{Tanítás előtti Generátor kimenetei}
 \label{fig:deconv-vs-conv_upsmpl}
 \end{figure}
-
-
-\Section{Tanítás címkékkel}
-
-A GAN alap esetben minták rendezetlen halmazán tanul. Viszont a legtöbb adathalmaz annotációkkal van ellátva, amelyeket nem veszünk figyelembe a tanítás során és a modellre bízzuk, hogy megtanulja reprezentálni a tanítóhalmaz különféle objektumait. Ha szempont, hogy a GAN különféle osztályokra tudjon képeket generálni, akkor használhatjuk a Class Conditioning technikát \cite{mirza2014conditional}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=13cm]{images/label_conditioning.png}
-\caption{Tanítás előtti Generátor kimenetei}
-\label{fig:labelconditioning}
-\end{figure}

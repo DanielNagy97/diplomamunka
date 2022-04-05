@@ -1,5 +1,22 @@
 \Chapter{Koncepció}
 
+\Section{Az objektumfelismerés}
+Az objektumfelismerés célja a számítógépes látás esetében, hogy egy gépi tanulásos modell egy vizsgált képen meghatározza a képen található objektumokat. Egyszerűbb esetben osztályozási feladatról beszélhetünk, amikor a bemeneti képeket egy-egy diszkrét címkével látja el a modell. A modell kimenete rendszerint az osztályokhoz tartozó valószínűségi értékek lesznek. A képek osztályozásához általánosságban konvolúciós rétegek segítségével nyerik ki a képekre vonatkozó információkat és egyúttal csökkentik a bemeneti dimenzószámot is. Kiemelném az Inception modellt \cite{szegedy2015going}, amely a Google kutatói által kifejlesztett mély konvolúciós hálózat. Fő céljuk egy olyan modell megalkotása volt, amely az ImageNet adathalmaz \cite{deng2009imagenet} 1000 darab osztályára megoldja az osztályozási feladatot. Az eredeti modell 2014-es megjelenése óta három további verziót is megélt (v2/v3 \cite{szegedy2016rethinking}, v4 \cite{szegedy2017inception}).
+Ha a képen található objektum környezetéről feltételezzük, hogy nem hordoz számunka lényeges információkat, úgy a címkék használata elegendő lehet bizonyos feladatoknál. Viszont előfordulhat olyan alkalmazási környezet is, amikor a bemeneti képeken nem csupán egyetlen objektum található és mindegyikhez szeretnénk rendelni címkét. Ilyen esetekben a felismert objektumokat különféle annotációkkal láthatja el a modell. Az azonosított elemeket befoglaló dobozokkal \cite{redmon2016you} vagy pixel-szinten is jelölheti a modell, az utóbbi esetben szemantikus szegmentációról beszélhetünk \cite{long2015fully}.
+Külön kiemelném a CLIP \textit{zero-shot} osztályozót \cite{radford2021learning}, amelyet az internetről összegyűjtött képeken és a hozzájuk tartozó szöveges leírásokon tanítottak be. A CLIP modell képes rövid leírásokat is adni a kép tartalmáról és az egyes mondatokat valószínűségi értékekkel látja el. Vagyis a különféle annotációk helyett természetesnyelvi leírásokat ajánl egy-egy képhez. A modell az inverz problémakör több megvalósításában is feltűnik majd amelyekre a következőkben kitérek.
+
+
+
+\Section{Az objektumfelismerés inverz problémája}
+
+Az objektumfelismerés inverz problémája alatt azt a feladatot értjük, amely során csupán a képekre vonatkozó információk állnak redelkezésünkre és ezen adatokat a gépi tanulásos modellnek a lehető legjobban kell reprezentálnia egy-egy kép formájában. 
+Ehhez nem csupán a bemeneti, általában természetesnyelvi szöveget kell értelmeznie a modellnek, hanem a képek kigenerálásának módja is megoldandó probléma.
+
+
+TODO: Különböző szerzők különféle megközelítéseinek bemutatása!
+
+Egyes szerzők a minél valóságűbb eredményekre törekedtek, ehhez vagy Variational Autoencoder alapú architektúrát használtak \cite{ramesh2021zero}, vagy a Generative Adverserial Network alapokon nyugvó megoldásokat \cite{dong2021unsupervised, reed2016learning, xu2018attngan, zhang2017stackgan}.
+
 \Section{A fejezet célja}
 
 Ez a fejezet még nem a saját eredményekkel foglalkozik, hanem bemutatja, mi a problémakör, milyen módszerekkel, milyen eredményeket sikerült elérni eddig másoknak.
