@@ -12,6 +12,7 @@ Két random zajvektor között ha interpolálunk, akkor minden egyes mintavétel
 
 A bemeneti vektorok tere tehát folytonosan van kitöltve, bármely pontra egy képet kaphatunk vissza. Viszont ezen tér feltérképezése sem egy triviális feladat és az sem biztosított, hogy a tér az egymáshoz hasonló jellegzetességekkel van kitöltve.
 
+\Section{Képek közelítése pixel-szinten}
 A képek közelítésre egy megoldás lehet a \textit{synthesis-through-optimization}\cite{frans2021clipdraw} technika, amelyhez nem kell betanítani egy újabb modellt, csupán optimalizációs alapon történik meg a képek közelítése.
 A technikához szükségünk van egy célfüggvényre, amelyre az optimalizációt végre tudjuk hajtani egy megjelenítőre, amely esetünkben a GAN generátora lesz és egy olyan eszközre, amellyel mérni tudjuk a kigenerált képek jóságát. Az utóbbi eszköz általában egy osztályozó szokott lenni, amelynek a tudásával bejárhatjuk a vizsgált teret. Az optimalizálást pedig a gradiens keresés módszerével szokás végrehajtani.
 A CLIP \cite{radford2021learning} zero-shot osztályozó igen közkedvelt az ilyen fajta vizsgálatok elvégzésére. Az osztályozó kimenetén szabad szöveges mondatok jelennek meg a vizsgált képekre a megfelelő valószínűségi értékekkel kiegészítve. A CLIPDraw-ban \cite{frans2021clipdraw}  például nem is GAN modellt használtak a képek generálására, hanem csupán Bézier-görbék halmazán végezték el az optimalizálást és eredményül rajzokhoz hasonló képeket kaptak. Esetükben a célfüggvény a bemeneti mondatok és a CLIP osztályozó által kiadott mondat koszinuszi távolságának minimalizálása volt. A keresés végén a görbék olyan alakban rendeződtek, amelyek legjobban reprezentálják a bemeneti szabad-szöveges mondatot a CLIP osztályozó szerint.
@@ -59,6 +60,7 @@ for i in range(steps):
     noise = noise - (step_size * gradients)
 \end{python}
 
+Az implementációban ügyelni kell arra, hogy a gradiensek meghatározásához szükséges változókon ne hajtsunk végre a TensorFlow-on kívül. Tehát ha a számolás során mátrix műveleteket kell alkalmazunk a változóinkra, akkor azt a Numpy segítségével sajnos nem tehetjük meg. Viszont a TensorFlow-ban is megtalálhatóak a Numpy csomagból ismert eljárások, sokszor teljesen megegyező névvel és paraméterezéssel.
 
 Momentummal való kiegészítés:
 
@@ -93,16 +95,29 @@ momentum 0 - 1 között (0 esetén sima gradient descent)
 \label{fig:gradfound}
 \end{figure}
 
+\Section{Képek keresése osztályozó segítségével}
+A képek visszakeresése pixel szinten csupán azokban az esetekben adhat igazán jó megoldást, amikor a Generátor egy korábbi kimenetére végezzük el a keresést. Az előbbiekben erre láthattunk példát, a \ref{fig:gradfound} ábrán is az figyelhető meg, hogy a korábban kigenerált kép bemeneti vektorát hogyan sikerült a gradienslejtési módszerekkel (momentum nélkül és momentummal) visszakeresni.
+Viszont ha egy külső forrásból érkező képet kívánunk így visszakeresni, akkor az eredményül kapott vektorból generált kép nem fogja olyan jól közelíteni a keresendő képet, hiába sikerült minimalizálnia a távolságot.
+Ez értelemszerűan abból adódik, hogy az algoritmus a keresés során a nyers pixelértékeket veszi csak figyelembe, viszont a Generátor nem képes minden pixelét egymástól függetlenül változtatni, hiszen a dekonvolúciós rétegeknek köszönhetően betanulta a tanítóhalmaz jellegzetességeit és a kigenerált képek is a tanítóhalmaz eloszlását követik. Így nem létezhet olyan bemeneti vektor, amellyel tetszőleges pixelértékeket felvehet a kimeneti kép.
+Ha az eredeti adathalmazból  kívánunk képeket visszakeresni, akkor közelítő eredményeket kaphatunk, viszont ezek továbbra sem lesznek tökéletes találtatok, hiszen a GAN nem pixel pontosan tanulja be az adathalmaz elemeit, hanem azok jellegzetességeit tanulja meg reprezentálni, ezért is nevezik a GAN-t \textit{Representation-learning} \cite{geron2019hands} modellnek is.
+
+Ha a hibafüggvényt kicseréljük és az optimalizációt egy, az adathalmazon tanított osztályozóval végezzük el, úgy viszonylag jó találatot kaphatunk. Természetesen ilyenkor az osztályozó teljesítményétől is függ az eredmény jósága.
+Az irodalomkutatás során egyetlen munkát találtam, amely publikálva is volt (CLIPDRAW\cite{frans2021clipdraw}) a további ismertebb munkák csupán notebook-ok formájában érhetőek el. Viszont a közös bennük, hogy mind a CLIP\cite{radford2021learning} osztályozó kimenetei alapján végzik el az optimalizációt.
+
+Egy hasonló megoldást alkalmaztam, viszont a CLIP osztályozó helyett egy saját modellt tanítottam be, hogy a megoldásom kevésbé legyen függő külső modellektől. Az osztályozó modell alapja az Inception v3, amely a témám során több helyen is feltűnt, az IS és FID pontok számítás is ezen modellen alapszik. Az imageNet \cite{deng2009imagenet} adatbázison tanított inception modell az adatbázis 1000 darab osztályára képes osztályozni. Ha a modellt használni kívánjuk a saját adathalmazunkra, akkor az úgynevezett \textit{Transfer-learning} technikát kell alkalmazni a tanításhoz, amelynek lényege, hogy egy, már betanított általános modellre egy újabb modellt építünk, amely egy szűkebb, speciális feladat megoldására szánunk. Esetünkben nincs szükség 1000 darab osztályra. Viszont az Inception modell-t felhasználhatjuk a képek jellegeinek kinyerésére és a modell utolsó rétegét pedig kicseréljük a saját osztályozónkra.
+A tanítás során az eredeti modell súlyait lefagyasztjuk, vagyis a háló ezen részének paramétereit taníthatatlanná tesszük és a tanítás során csak az általunk hozzáadott rétegeket frissítjük.
+A hibafüggvény számoláshoz a Kategórikus Kereszt-entrópiát használjuk fel. Az osztályozó modell tanítása ezek után a teljesen megszokott módon történik.
+
+Ide jöhetnének görbék, meg confusion matrix a három classra.
+
+A bemeneti vektorok visszakeresése pedig a már ismertetett gradiens süllyesztés módszerrel valósul meg, viszont a hibafüggvény számolása a Kategórikus Kereszt-entrópia által kerül meghatározásra, hasonlóan, mint az osztályozó tanításánál. Az algoritmus bemenete tehát a kezdeti zajvektor, a keresendő címke és a gradiens módszer paraméterei (a lépésköz, a momentum és az iterációszám).
+A bemeneti címkét \textit{One-Hot} enkódolással kell megadni a keresztentrópia számoláshoz, ugyanis az új osztályozó modell kimenete az adott osztályok valószínűségi értékei lesznek. A gradiens kereséssel pedig a keresztentrópia értéket kívánjuk csökkenteni. Tehát ha egy adott osztályra kívánunk egy olyan vektort kapni, amelyből a megfelelő osztályba tartozó képet ki tudja generálni a generátor, akkor ebben az esetben az osztályhoz tartozó valószínűségi érték 1 lesz, a többi osztályé pedig 0.
+Amennyiben kevert osztályra kívánunk képet generálni, úgy olyan keresendő one-hot enkódolást kell megadnunk. Mivel a GAN tere folytonosan van kitöltve, így lennie kell olyan pontnak a térben, amely egyszerre több osztály jellegzetességeit is magában hordozza. A \ref{fig:interpolation} ábrán is megfigyelhető, hogy az interpoláció mintavételezett pontjaiban a két végpont között milyen folytonos az átmenet és a köztes állapotokban mindkét pont tulajdonságai megjelennek.
 
 \Section{Minták klaszterezése}
 
 A GAN tanítása során a generátor a bemeneti vektorok terére megtanulja, hogy a tér egyes pontjaira milyen adatot képezzen le. A térből mintavételezett adatok mindegyikére egy, a tanítóhalmaz eloszlását követő adatot tud kigenerálni.
 A tanítási lépések során általában a Normális vagy Egyenletes eloszlás szerint generálunk pontokat és azok alapján tanul a generátor modellunk. Annak ellenére, hogy a tér egyes pontjaira igen jól betanul a modell, nem garantálható, hogy az így keletkezett tér megfelelően klaszterezhető lehet és valójában a tanítás során generált pontok eloszlását követik a klaszterek pontjai \cite{mukherjee2019clustergan}.
-
-Thus even though the latent
-space may contain full information about the data, the dis-
-tance geometry in the latent space does not reflect the inher-
-ent clustering
 
 \SubSection{Tanítás címkékkel}
 

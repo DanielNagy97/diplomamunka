@@ -1,4 +1,168 @@
-\Chapter{Deep Convolutional GAN példa}
+\Chapter{Új adatok előállítása, generatív modellek}
+A generatív modellek alatt olyan gépi-tanulásos architektúrákat értünk, amelyek célja, hogy új adatot állítson elő. A létrejött adatnak hasonlítnia kell a tanítómintához, vagyis a generált minták eloszlásának közelítenie kell a valós adatok eloszlását. Az ilyen modelleknek meg kell tanulnia a tanítóminta jellegzetességeit és azt is, hogy ezen jellegeket a belső reprezentációjából hogyan tudná értelmezhető formában előállítani. A generatív modellek esetében ha a modell a tanítóminta képeit generálná csupán vissza pixel-pontosan, úgy a modell elveszti célját és egyfajta ovefitting-nek tekinthetnénk a jelenséget.
+
+Az Autoencoder egy olyan statisztikai elveken alapuló architektúra, amelynek célja, hogy a tanítóhalmaz jellegzetességeit feltérképezze és olyan formába kódolja a tulajdonságokat, hogy azokból az eredeti adat visszaállítható legyen. Az architektúra lényegében egy nehezen kezelhető sűrűségfüggvényt definiál, egy látens taggal, így ebben az esetben nem lehet közvetlenül optimalizálni, nem úgy mint például a pixelRNN/pixelCNN generatív modellek esetében \cite{oord2016conditional}, hanem az úgynevezett evidence lower bound (ELBO) mértékegységre kell optimalizálni\cite{oord2017neural}. Az architektúra két komponense az Encoder, amely előállítja a jellegvektorokat a bemenet alapján és a Decoder, amely a jellegvektorokból visszaállítja az adatot. Tehát ebben az esetben a cél az, hogy egy olyan reprezentációt készítsünk a tanítómintáról, amely alapján az teljes mértékben visszaállítható legyen. Egyfajta tömörítési folyamatnak is felfogható az encoder működése. Egy módosított változattal az encoder által létrehozandó látens tér olyan formában áll elő, amelyből véletlenszerűen is vehetünk mintákat és dekódolva teljesen új adat áll elő. Ezt a módszert Vector Quantised-Variational AutoEncoder-nek nevezték el, amely alkalmazható generatív modellként \cite{oord2017neural}.
+Ha az autoencoder-t képek generálására kívánjuk felhasználni, úgy a helyreállított képeken egyfajta homályosságot figyelhetünk meg, amely a dekódolás során jelentkező információvesztésből adódik.
+
+A Generative Adverserial Network (GAN) \cite{goodfellow2014generative}, egy olyan generatív modell, amely nem a megszokott statisztikai alapokon optimalizál, mint például az Autoencoder vagy pixelRNN modellek, hanem játékelméleti megközelítést alkalmaz, így a modell tanítása is merőben másképp zajlik.
+A tanulás során két neurális hálózat versenyzik egymással: egy generátor, amelynek az a szerepe, hogy a tanítómintákhoz hasonló adatot generáljon a bemeneti zajból és egy diszkriminátor, amely egy bináris osztályozó, amely a generátor által generált adatot vizsgálja és eldönti, hogy az valódi vagy hamis.
+A tanítás során ezen két háló versenyzik egymással, együtt fejlődve. Az autoencoderhez képest a GAN-al generált képeken már nem figyelhető meg a homályosság, élesebb és fotorealisztikusabb képek generálása a fejlettebb GAN architektúrákkal megoldható.
+
+A generátor bemenete egy zajvektor, amely általában Gauss- vagy egyenletes eloszlásból állítunk elő. A zajnak a terét az irodalom látens térnek is nevezi, hiszen a tanítás során a modell megtanulja, hogy ezen többdimenziós tér egyes pontjaira milyen kimenetet generáljon. Vagyis ezzel lényegében kitölti a rendelkezésre álló tér tartományait a megtanult jellegzetességekkel. A betanított generátorral, optimális esetben, ezen tér bármely pontját mintavételezve a tanítóhalmazhoz hasonló adatokat generálhatunk.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=12cm]{images/AEvsGAN.png}
+\caption{Az Autoencoder és a GAN}
+\label{fig:aevsgan}
+\end{figure}
+
+\Section{GAN modell tanítása}
+
+Ha a legegyszerűbb esetet vizsgáljuk és csak a képek rendezetlen halmazára tanítjuk a modellt, mindenféle kiegészítő információ és annotáció nélkül, akkor a tanítás a következőképpen zajlik.
+A továbbiakban a következő jelöléseket használom: legyen $D$ a diszkriminátor, $G$ pedig a generátor.
+
+\SubSection{Hibafüggvények}
+
+A $G$ és $D$ hibájának számolása a bináris kereszt-entrópián alapszik.
+A bináris kereszt-entrópia hibafüggvény a következőképpen írható fel:
+$$L(\hat y, y) = y . \log \hat y + (1-y). \log (1 - \hat y)$$
+Ahol $\hat y$ a predikció, $y$ pedig a valós címke.
+
+\begin{python}
+cross_entropy = keras.losses.BinaryCrossentropy(from_logits=True)
+\end{python}
+
+A Kerasban található implementáció egy segédfüggvényt ad vissza, amelyet különféle paraméterekkel inicializálhatunk. A \texttt{from\_logits=True} paraméter esetén a keresztentrópia számolásnál nem szükséges a diszkriminátor modellnek tartalmaznia az utolsó sigmoid aktivációsfüggvényét, ami így egy úgynevezett \textit{Logits} kimenettel fog rendelkezni. A számolás során a kimeneti értékekre alkalmazódik ebben az esetben a sigmoid függvény egy fajtája. A gradiensek számolása így egyszerűbb lesz a modell számára a backpropagation során (Tényleg?)
+
+\SubSection{Diszkriminátor hibafüggvénye}
+
+A $G$ generátor egy $z \in \mathbb{R}^n, n \geq 1$ bemeneti zajvektor alapján előállít egy generált adatot $G(z)$.
+A $D$ diszkriminátor egy bináris osztályozó, amelynek feladata, hogy az $x$ és $G(z)$ bemeneteit osztályozza.
+
+$D(x)$ esetén 1, $D(G(z))$ esetén pedig 0 címkét várunk.
+
+A hibafüggvény számolása két lépésben történik a kétféle bemenet miatt:
+
+$D(x)$-re nézve a kereszt-entrópia a következő:
+$$L(D(x), 1) = 1.\ln D(x) + (1 - 1).\ln(1 - D(x))$$
+$$L(D(x), 1) = \ln D(x)$$
+Vagyis jelen esetben $D$-nek a $\ln(D(x))$-et kell maximalizálnia.
+
+$D(G(z))$-re nézve a kereszt-entrópia a következő:
+$$L(D(G(z)), 0) = 0.\ln D(G(z)) + (1 - 0).\ln(1 - D(G(z)))$$
+$$L(D(G(z)), 0) = \ln(1- D(G(z)))$$
+Vagyis a $\ln(1 - D(G(z)))$-t kell maximalizálnia.
+
+Egyetlen mintára a hibafüggvény a következőképpen néz ki:
+$$\max V(D) = \ln D(x) + \ln(1 - D(G(z))$$
+
+Batch-ra nézve:
+$$\max V(D) = \mathbb{E}_{x \sim P(x)} \left[\ln D(x) \right] + \mathbb{E}_{z \sim P(z)} \left[\ln(1 - D(G(z))) \right]$$
+
+Ahol a $P(x)$ a valószínűségi eloszlása a tanítóhalmaznak, $P(z)$ a valószínűségi eloszlása a $z$ zajvektornak. (látens tér).
+
+\begin{python}
+def discriminator_loss(real_output, fake_output):
+    real_loss = cross_entropy(tf.ones_like(real_output), real_output)
+    fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
+    
+    total_loss = real_loss + fake_loss
+    return total_loss
+\end{python}
+
+
+\SubSection{Generátor hibafüggvénye}
+
+A $G$ generátor feladata az, hogy megtévessze a $D$ diszkriminátort azáltal, hogy a tanítóhalmazhoz hasonló adatokat generáljon.
+Vagyis a $G$ érdeke az, hogy a $D(G(z))$ 1-es címkét kapjon 0 helyett.
+
+Tehát a bináris keresztentrópia egy mintára:
+$$L(D(G(z)), 0) = \ln(1 - D(G(z))$$
+$D$ minimalizálni kívánja a $D(G(z))$-t, míg a $G$ maximalizálni szándékozik azt.
+
+A $G$ a tanítás során sosem fog valódi adatot látni, de a teljesség kedvééert a hibafüggvénye a következőképpen írható fel (Csak a második kifejezést minimalizálja valójában):
+$$\min V(G) = \mathbb{E}_{x \sim P(x)} \left[\ln D(x) \right] + \mathbb{E}_{z \sim P(z)} \left[\ln(1 - D(G(z))) \right]$$
+
+\begin{python}
+def generator_loss(fake_output):
+    return cross_entropy(tf.ones_like(fake_output), fake_output)
+\end{python}
+
+Vagyis a GAN hálózat tanítása során $D$ és $G$ egy minimax játékot játszanak a $V(G, D)$ értékfüggvénnyel.
+$$\min_{G}\max_{D}V(D, G) =  \mathbb{E}_{x \sim P(x)} \left[\ln D(x) \right] + \mathbb{E}_{z \sim P(z)} \left[\ln(1 - D(G(z))) \right]$$
+
+\SubSection{Optimalizáló módszer}
+A GAN modell súlyait a sztochasztikus gradiens algoritmussal szokás frissíteni.
+
+A Generátort és a Diszkriminátort a hibafüggvények alapján kiszámolt gradiensek alapján külön-külön kell tanítani. Különféle szerzők különböző optimalizáló módszerek használatát javasolják, az Adam \cite{kingma2014adam} és az RMSProp a két legnépszerűbb módszer.
+
+TODO: Optimalizáló módszerek bemtatása!
+
+\begin{python}
+generator_optimizer = keras.optimizers.Adam(1e-4)
+discriminator_optimizer = keras.optimizers.Adam(1e-4)
+\end{python}
+
+
+\SubSection{Tanítási lépés}
+A GAN esetében a hálózat paraméterei közé tartozik a mini-batch elemszáma is. Mini-batch alatt a tanítóhalmaz egy bizonyos elemszámú mintát tartalmazó szeletét értjük. A mini-batch-ok alkalmazása azért lényeges, hogy egy tanítási lépés során a modell ne lássa a teljes tanítóhalmazt. A hálózat tanításához általában sok mintára van szükségünk, így az egy darabban való tanítás igen nehézkes és számításigényes lenne. De nem csupán ez jelenti a fő veszélyt, Ha egy lépésben láthatná a diszkriminátor az összes képet, akkor túlságosan is megnőne a teljesítménye és a generátornak esélye sem lenne felzárkózni. A mini-batch-okon való tanítás tehát elengedhetetlen része a tanítási folyamatnak és a megfelelő ütemű tanulás biztosításának.
+A fellelhető irodalomban a mini-batch-ot néhány esetben röviden batch-nak nevezik. Viszont a batch egyes irodalmakban a teljes dataset-et jelöli, így az egyértelműség kedvéért minden esetben kiírom a mini-batch-ot.
+
+%% GAN 2014 cikkből
+
+A GAN hálózat egy tanítási lépése a következő lépésekből áll \cite{goodfellow2014generative}:
+
+Legyen $m$ a minibatch elemszáma $m \in \mathbb{N}$
+\begin{enumerate}
+\item Hozzunk létre $m$ darab zajmintát $(z_1, \ldots, z_m)$ gauss eloszlásból $P_g(z)$.
+\item A tanítóhalmazból emeljük ki a soronkövetkező $m$ darab tanítómintát (képet), és ezt jelöljük $(x_1, \ldots, x_m)$-el $P_{\text{data}}(x)$
+\item Frissítsük a $D$ diszkriminátort a sztochasztikus gradiens emelkedésével (?? tükörfordítás)
+$$ \nabla \theta_d \frac{1}{m} \sum_{i=1}^{m} \left[\log D(x_i) + \log(1 - D(G(z_i))) \right]$$
+\item  Frissítsük a $G$ generátort a sztochasztikus gradiens lejtésével (?? tükörfordítás)
+$$ \nabla \theta_d \frac{1}{m} \sum_{i=1}^{m} \log(1 - D(G(z_i)))$$
+\end{enumerate}
+
+A GAN részeit tehét külön-külön tanítjuk, hiszen különböző neurális hálókról van szó. Az eredeti cikkben is javaslatot tesznek arra, hogy a $D$-t esetleg több lépésben is lehetne tanítani, majd a $G$-t egyetlen lépésben frissíteni.
+Különböző tanítási stratégiákban ez is egy szabad paraméter lehet. Számomra megfelelő volt az 1:1-es tanítási lépés alkalmazása is. Viszont több cikkben is vizsgálják ezt, mint lehetséges beállítást.
+A tanítás hossza természetesen függ az adathalmaztól és annak méretétől, az alkalmazott mini-batch mérettől, a modellben található paraméterektől és az optimalizáló eljárástól.
+
+A TensorFlow-ban és Kerasban történő tanítási lépés megvalósítása a következő kórdészletben figyelhető meg. A \texttt{@tf.function} annotáció segítségével jelezhetjük a TensorFlow backendnek, hogy az annotációval ellátott függvényt fordítsa le (PONTOSÍTÁS). Az annotáció használata a kritikus, nagy erőforrásigényű és ismétlődő számolásoknál a futásidőt csökkentheti. Az függvény első meghívásánál felállítja a függőségi vagy hívási gráfot is, ezzel is csökkentve a futásidőt. (PONTOSÍTÁS)
+\begin{python}
+@tf.function
+def train_step(images):
+    noise = random.normal([batch_size, latent_dim])
+    with GradientTape() as gen_tape, GradientTape() as disc_tape:
+        generated_images = generator(noise, training=True)
+        real_output = discriminator(images, training=True)
+        fake_output = discriminator(generated_images, training=True)
+        gen_loss = generator_loss(fake_output)
+        disc_loss = discriminator_loss(real_output, fake_output)
+    gradients_of_generator = gen_tape.gradient(
+        gen_loss, generator.trainable_variables
+    )
+    gradients_of_discriminator = disc_tape.gradient(
+        disc_loss, discriminator.trainable_variables
+    )
+    generator_optimizer.apply_gradients(
+        zip(gradients_of_generator,
+        generator.trainable_variables)
+    )
+    discriminator_optimizer.apply_gradients(
+        zip(gradients_of_discriminator,
+        discriminator.trainable_variables)
+    )
+\end{python}
+
+A tanítás ciklus függvénye az alábbi módon nézhet ki. Ehhez olyan datasetre lesz szükségünk, amely mini-batch-okat tartalmaz. A későbbiekben láthatunk példát a dataset megfelelő összeállítására is.
+\begin{python}
+def train(dataset, epochs):
+    for epoch in range(epochs):
+        for (batch, image_batch) in enumerate(dataset):
+            train_step(image_batch)
+\end{python}
+
+\Section{Képeket előállító GAN modell}
 
 Ezen architektúra természetesen a mai eredmények mellett egyszerűnek tűnhet elsőre, viszont a későbbi, fejlettebb architektúrákban többségében megfigyelhető, hogy ezen modellt vették alapul. Természetesen az architektúra egy igen egyszerű kiegészítést kínált az eredeti GAN hálózatra: konvolúciós rétegeket alkalmaz a rejtett rétegekben mind a Generátor, mind a Diszkriminátor esetében. A konvolúciós rétegek segítségével a képeken lévő összefüggő pixelek kapcsolatairól pontosabb reprezentációt kaphatunk, így képek generálásához is hasznos lehet a módszer.
 
@@ -9,7 +173,7 @@ Ezen architektúra természetesen a mai eredmények mellett egyszerűnek tűnhet
 \label{fig:dcgan}
 \end{figure}
 
-\Section{Generátor}
+\SubSection{Generátor}
 
 Az osztályozáshoz használt konvolúciós hálókkal ellentétben a Generátorban a kisebb felbontás felől haladunk a nagyobb felbontásig.
 A generátor modellem első implementációjában \textit{Dekonvolúciós} rétegeket alkalmaztam, amelyet \textit{Transzponált konvolúciós} rétegnek is nevezhetünk. A dekonvolúció a konvolúció ellentetje, vagyis a feladata, hogy egy alacsonyabb dimenziójú reprezentációt magasabb dimenzióba emeljen. Segítségével minden rejtett réteg kimenete egy nagyobb felbontású kép lesz. Tehát a hálónak jelen esetben meg kell tanulnia a rétegekben az optimális felbontás-növelést. Előre megadott paraméterek a filterek darabszáma, a kernel mérete, a strides(?) és a padding. Ha a padding-ot "same"-re és ha a strides paramétert $2 \times 2$-esnek választjuk, úgy a réteg kimenetén megjelenő kép felbontása kétszerese lesz a bemeneti oldalon megfigyelhető képnek. A rejtett rétegekben kezdetben ReLU aktivációs függvényt használtam, a neuronok kezdő értékeit a He inicializációs technikával \cite{he2015delving} állítottam be.
@@ -65,7 +229,7 @@ generator = keras.Sequential([
 \label{fig:tanh}
 \end{figure}
 
-\Section{Diszkriminátor}
+\SubSection{Diszkriminátor}
 
 A Diszkriminátor modell lényegében egy bináris osztályozó, amely eldönti, hogy a bemenetül kapott kép valódi-e vagy hamis. A bemeneti kép konvolúciós rétegeken megy végig, kinyerve a jellegzetességeket és felállítva egy olyan belső reprezentációt, amely alapján az utolsó \textit{dense} réteg megfelelő kimenettel tud rendelkezni. A képen található mintázatokat a konvolúciós rétegek filterek segítségével tanulja meg, amelyek megadott kernelméretekben pásztázzák végig a bemenetet. Így az egyes konvolúciósrétegek kimeneteként egy olyan reprezentáció jön létre a bemeneti képről, amelyben érvényesülnek a pixeleket körülölelő további pixelek kapcsolatai is. Ezáltal az utolsó előtti réteg, a szerializáció (\textit{Flattening}) kevésbé fogja a kép tartalmára vonatkozó információt rontani. Mivel a tanítóminta képeinek pixelértékeit normalizáltuk a $[-1, 1]$ intervallumra, így a diszkriminátor a bemenetén is ilyen tulajdonságú képeket vár. A Diszkriminátor felépítésben hasonlít a Generátorhoz, lényegében annak tükörképeként képzelhetjük el. Viszont a dekonvolúciós rétegek helyett konvolúciós rétegeket alkalmazunk benne a jellegzetességek kinyerésére. Majd ha eljutunk a kívánt dimenziószámig, egy teljesen összekötött rétegben hozza meg a modell a döntést.
 
@@ -136,7 +300,7 @@ Az alábbi tábláztokban összefoglalom az architektúra felépítését:
 \end{tabular}
 \end{center}
 
-\Section{Tanítás, mérések}
+\SubSection{Tanítás, mérések}
 
 A felvázolt architektúrát az Adam optimalizációs módszerrel, 0.0004 \textit{learning rate} hiperparaméter mellett tanítva a hibaértékek a következő ábrához hasonlóan alakulnak:
 
@@ -163,7 +327,7 @@ A hibaértékek változását vizsgálva megfigyelhető a versengés, vagyis hog
 
 A hibaértékekből nem vonhatunk le pontos következtetéseket, így a fenti ábrák csupán szemléltetésképp készültek el. A GAN teljesítményének mérésére egyéb ajánlások jelentek meg, ilyen az Inception Score \cite{salimans2016improved} és az Fréchet Inception Distance \cite{heusel2017gans}.
 
-\Section{Az architektúra gyengeségei, problémái}
+\SubSection{Az architektúra gyengeségei, problémái}
 
 A modell természetesen bővíthető tetszőlegesen nagy felbontásig, a felbontást növelő rétegek számával. Viszont az architektúrával problémák léphetnek fel:
 \begin{itemize}
@@ -174,7 +338,7 @@ A modell természetesen bővíthető tetszőlegesen nagy felbontásig, a felbont
 	Az általánosítás szempontjából ez előnyös is lehet, viszont ha merőben különböző osztályokra szeretnénk betanítani a modellt, akkor az úgynevezett \textit{class conditoning} nélkül ezt igen nehezen tudnánk megvalósítani.
 \end{itemize}
 
-\Section{Sakkmintázat kiküszöbölése}
+\SubSection{Sakkmintázat kiküszöbölése}
 
 \begin{figure}[h]
 \centering
