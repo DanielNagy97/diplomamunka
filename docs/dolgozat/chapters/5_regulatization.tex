@@ -1,16 +1,16 @@
 
 \Chapter{GAN teljesítmény mérés és regularizációs módszerek}
 
-A gépi tanulásos modellek tanítási életciklusának utolsó lépése optimális esetben a tesztelés. Hagyományos esetben a dataset-et három részre osztjuk fel: Tanító-, teszt- és validáló halmazra. Hogy ezt milyen arányban tesszük meg, az függ a problémától is, de általánosan a teszt adathalmaz a dataset 20\%-a is lehet, a validáló halmaz még kissebb szelete a datasetnek és a tanítóhalmazon történik a modell tanítása.
+A gépi tanulásos modellek tanítási életciklusának utolsó lépése optimális esetben a tesztelés. Hagyományos esetben a dataset-et három részre osztjuk fel: Tanító-, teszt- és validáló halmazra. Hogy ezt milyen arányban tesszük meg, az függ a problémától is, de általánosan a teszt adathalmaz a dataset 20\%-a is lehet, a validáló halmaz még kisebb szelete a dataset-nek és a tanítóhalmazon történik a modell tanítása.
 A teszt halmazt csupán egyetlen egyszer láthatja hagyományos esetben a modell, a tanítás után.
 A teszthalmazzal szimuláljuk a modell valós adatokra történő alkalmazását, hiszen a modell számára ezen adatok teljesen ismeretlenek lesznek. A tesztadatok az eredeti dataset elemei, így rendelkezésünkre állnak az elvárt eredmények is, így a modell predikcióit össze tudjuk vetni az elvárt kimenettel, amelyből megbecsülhetjük a modell pontosságát különféle metrikák szerint.
 A GAN esetében osztályozási feladatot a diszkriminátor lát el, viszont a hamis adatok nem részei a datase-ünknek, azok a generátor által kreálódtak. A betanított modellnek csupán a generátora kerül felhasználásra, hiszen ezen komponens önmagában képes előállítani az új adatokat. A diszkriminátornak csupán a tanítás során van jelentősége és a validálásra önmagában nem alkalmas, hiszen ha a diszkriminátorunk rosszul tanult, úgy a generátorunk sem fog tudni a datasethez hasonló képeket generálni.
-A GAN esetében nem szokás a datasetet feldarabolni tanító és teszt részre, hiszen nem tudjuk a generátorra alkalmazni a már ismert metrikákat.
+A GAN esetében nem szokás a dataset-et feldarabolni tanító és teszt részre, hiszen nem tudjuk a generátorra alkalmazni a már ismert metrikákat.
 Ha képek generálása a feladat, úgy még nehezebb dolgunk van, hiszen a képeken hordozott információ igen összetett lehet.
-A generátor kiementét kell valamilyen módon tesztelnünk, ami nem egy egyértelmű feladat.
-Egy emberi szemlélő természetesen meg tudná különböztetni a generált és a valós képeket. Lényegében a diszkriminátor feladatát látná el az emberi tesztelő, akinek hasonlóad mutathatnánk valódi és generált képeket, amelyekről el kell döntenie, hogy melyik a valódi és melyik a hamis. A fotorealisztikus képgenerálás igen nehéz feladat és ha egy kicsit is rosszul teljesít a modell, azt egy emberi szemlélő hamar észreveszi és a modell pontossága igen alacson lesz az emberi megfigyelő ítéletei alapján. Ha visszajelzést is kap az ember a hibáiról, akkor Salimas et al. megfigyelték, hogy a továbbiakban sokkal pesszimistább ítéletet hoznak a tesztelők a képekre. Bináris, osztályozás helyett diszkrét vagy folytonos skálán is mérhetnénk a generált képeink jóságát. A pontos mérési eredmények érdekében több résztvevőt is be kéne vonnunk a tesztelébe. Már belegondolva is igen lassú és költséges feladat lenne a modellünk tesztelése, így nem hagyatkozhatunk az emberi validálásra. Ez motiválta Salimas et al.-t is.
+A generátor kimenetét kell valamilyen módon tesztelnünk, ami nem egy egyértelmű feladat.
+Egy emberi szemlélő természetesen meg tudná különböztetni a generált és a valós képeket. Lényegében a diszkriminátor feladatát látná el az emberi tesztelő, akinek hasonlóan mutathatnánk valódi és generált képeket, amelyekről el kell döntenie, hogy melyik a valódi és melyik a hamis. A fotórealisztikus képgenerálás igen nehéz feladat és ha egy kicsit is rosszul teljesít a modell, azt egy emberi szemlélő hamar észreveszi és a modell pontossága igen alacson lesz az emberi megfigyelő ítéletei alapján. Ha visszajelzést is kap az ember a hibáiról, akkor Salimas et al. megfigyelték, hogy a továbbiakban sokkal pesszimistább ítéletet hoznak a tesztelők a képekre. Bináris, osztályozás helyett diszkrét vagy folytonos skálán is mérhetnénk a generált képeink jóságát. A pontos mérési eredmények érdekében több résztvevőt is be kéne vonnunk a tesztelésbe. Már belegondolva is igen lassú és költséges feladat lenne a modellünk tesztelése, így nem hagyatkozhatunk az emberi validálásra. Ez motiválta Salimas et al.-t is.
 
-Az alábbi két ajánlás két mérőszámot definiál, amelyek segítségével meghatározhatjuk a GAN modellünk teljesítményét. Ezen validálási technikák megjelenése óta az újjonnan megjelent GAN architektúrák mindegyikét lemérték és a GAN-al foglalkozó cikkekben táblázatokban vetik össze a különféle modellek teljesítményét a sajátjukkal.
+Az alábbi két ajánlás két mérőszámot definiál, amelyek segítségével meghatározhatjuk a GAN modellünk teljesítményét. Ezen validálási technikák megjelenése óta az újonnan megjelent GAN architektúrák mindegyikét lemérték és a GAN-al foglalkozó cikkekben táblázatokban vetik össze a különféle modellek teljesítményét a sajátjukkal.
 A két mérőszámot együttesen szokták alkalmazni, hiszen egyik módszer sem tökéletes, viszont a kettőt együtt alkalmazva ad egy bizonyos képet a modellünk teljesítményéről.
 A két mérőszám közös jellemzője, hogy mindkettő az Inception modell által kinyert jellegvektorok alapján határozza meg a modell jóságát.
 
@@ -23,7 +23,7 @@ inception_model = InceptionV3(weights='imagenet')
 predictions = inception_model.predict(images)
 \end{python}
 
-Az Inception modell bemenete alapértelmezett beállítasok mellett egy 299x299 -es felbontású rbg színcsatornákkal rendelkező kép. A pixelértékeket normalizáltan várja a modell a $[-1, 1]$ tartományon. A modell inicializálásakor paraméterként megadhatjuk a bemenet méretét, viszont az nem lehet 75x75-nél kisebb. Ha az \texttt{include\_top} paramétert \texttt{True} értékkel állítjuk be, úgy a modell tartalmazni fogja az utolsó Dense rétegét is, amely az ImageNet súlyok alapján betanított modell esetében 1000 osztály detektálására lesz képes.
+Az Inception modell bemenete alapértelmezett beállítások mellett egy 299x299 -es felbontású rbg színcsatornákkal rendelkező kép. A pixelértékeket normalizáltan várja a modell a $[-1, 1]$ tartományon. A modell inicializálásakor paraméterként megadhatjuk a bemenet méretét, viszont az nem lehet 75x75-nél kisebb. Ha az \texttt{include\_top} paramétert \texttt{True} értékkel állítjuk be, úgy a modell tartalmazni fogja az utolsó Dense rétegét is, amely az ImageNet súlyok alapján betanított modell esetében 1000 osztály detektálására lesz képes.
 
 Az említett, GAN teljesítménymérésére használatos módszerek az \textit{Inception Score} (IS) és \textit{Fréchet Inception Distance} (FID). Ezeket kívánom bemutatni az alábbi két alfejezetben.
 
@@ -39,7 +39,7 @@ $$ \exp(\mathbb{E}_x KL(p(y|x)||p(y))) $$
 
 Minél magasabb ez a szám, annál jobb a GAN teljesítménye. Természetesen az IS is kijátszható és hamis eredményeket is adhat. (Note on IS-ben van róla szó)
 
-TODO: Írni még erről gondolatokat, pontosítani
+%TODO: Írni még erről gondolatokat, pontosítani
 
 [Az inception score kódja]\\(https://github.com/openai/improved-gan/tree/master/inception\_score)
 TODO: Inception score implementálása Tensorflow 2-ben? Vagy az eredetivel kéne mérni? (Az még tf1-es)
@@ -48,11 +48,11 @@ TODO: Inception score implementálása Tensorflow 2-ben? Vagy az eredetivel kén
 \Section{Fréchet Inception Distance}
 Az Incepton Score kiegészítésére megjelent egy másik, széles körben elfogadott teljesítménymerő technika, a Fréchet Inception Distance (FID) \cite{heusel2017gans}. Az IS nem vette figyelembe a tanítóminta statisztikáit, és ez egy igen nagy hátránya a technikának. Továbbá az IS feltételein is javítottak, hogy a mintákon megtalálható zajok is befolyásolják a végső eredményt.
 
-TODO: Pontosítás!!!
+%TODO: Pontosítás!!!
 
 Minél alacsonyabb az FID, annál jobb a modell teljesítménye az adott tanítómintán.
 
-TODO: Összefoglaló táblázat, saját modellek eredményei, ábrák
+%TODO: Összefoglaló táblázat, saját modellek eredményei, ábrák
 
 
 
@@ -77,7 +77,7 @@ A tanítás közben felléphetnek lokális mode-collapse-ok is, amelyek a láten
 
 Egyes cikkekben az összeomlásig tanítják a felvázolt modelleket és az összeomlás előtti állapotokra állítják vissza a hálózat súlyait a használathoz \cite{brock2018large}
 
-TODO: Mode collapse okok pontosabb leírása, detektálási technikák megnézése
+%TODO: Mode collapse okok pontosabb leírása, detektálási technikák megnézése
 
 A GAN tanítása során nehézségekbe ütközhetünk. Legrosszabb esetben nem is kezd el konvergálni a generátor kimenete a tanítóminta képeihez, viszont abban az esetben gyanakodhatunk, hogy a modellünk nem lett helyesen felépítve. Amennyiben mégis elkezd fejlődni a modell és nem csak zaj jelenik meg a kimeneten az egyes tanítólépések után, de bizonyos számú epoch után mode collapse lép fel, úgy fontolóra vehetjük a következő regularizációs technikákat.
 
@@ -126,7 +126,7 @@ $$r = \sqrt{\frac{3}{fan_{avg}}}$$
 
 $$ \mathcal{U}\left[-r, r\right] $$
 
-Ezen inicializációs stratégia a tangens-hiperbolikusz, logisztikus és szoftmax aktivációs függvényekkel rendelkező rétegekben használatosak. 
+Ezen inicializációs stratégia a tangens-hiperbolikusz, logisztikus és softmax aktivációs függvényekkel rendelkező rétegekben használatosak. 
 
 A \textbf{He/Kaiming} inicializáció hasonló megközelítést alkalmaz,
 Normális eloszlásra:
@@ -139,11 +139,11 @@ $$r = \sqrt{3\frac{2}{fan_{in}}}$$
 
 $$ \mathcal{U}\left[-r, r\right] $$
 
-Ezen inicializációs stratégia pedig a ReLU aktivációs függvénnyek családjával rendelkező rétegekben ajánlott használni.
+Ezen inicializációs stratégia pedig a ReLU aktivációs függvények családjával rendelkező rétegekben ajánlott használni.
 
 A Keras a Glorot inicializálást használja alapértelmezetten.
 
-TODO: Egyszerű példákkal szemléltetve az eredményeket.
+%TODO: Egyszerű példákkal szemléltetve az eredményeket.
 
 
 \SubSection{Batch Normalization}
@@ -210,7 +210,7 @@ A mode collapse jelenség egyik ismertetőjegye amikor a generáto kimenetén k�
 Erre a problémára kíván javaslatot tenni a Mini-batch discrimination technika, amelynek alapötlete az, hogy a diszkriminátor a döntéseit több bemenet kombinációiból határozza meg.
 A cikkben felvetett implementációja az egymáshoz közeli képek detektálására irányul. Ha az inputként kapott mini-batch képei közel állnak egymáshoz, akkor az egész mini-batch-ot hamis címkével kell ellátni. Ezáltal az összeomlás egészen jól detektálható és ezen technika arra kényszeríti a generátort, hogy minél változatosabb képeket generáljon a hibafüggvényének minimalizálása érdekében.
 
-A diszkriminátor egy belső rétegének kimenete egy transzfromáló tensoron keresztül mátrixokat alkot és ezeknek nézi meg a L1 normáját...
+A diszkriminátor egy belső rétegének kimenete egy transzformáló tensoron keresztül mátrixokat alkot és ezeknek nézi meg a L1 normáját...
 
 
 ????? Zavaros !!!!!!!!
@@ -230,7 +230,7 @@ De a cikkben a feature matching-et jobbnak találták, viszont a későbbiekben 
 
 \SubSection{Two Time-Scale Update Rule (TTUR)}
 Ezen technikát szintén meg lehet valósítani architektúrális változtatás nélkül, csupán az Adam optimalizáló eljárás egyik paraméterét kell megfelelően beállítani az implementációjához.
-Heusel et al. \cite{heusel2017gans} cikkjében mérésekkel alátámaztották, hogy ha az Adam optimalizáló módszert választjuk a GAN tanításához és a learning rate paramétert a generatároban és a diszkriminátorban különbözőre állítjuk, úgy a modell gyorsabban és stabilabban fog konvergálni a lokális optimumokhoz.
+Heusel et al. \cite{heusel2017gans} cikkjében mérésekkel alátámasztották, hogy ha az Adam optimalizáló módszert választjuk a GAN tanításához és a learning rate paramétert a generátorban és a diszkriminátorban különbözőre állítjuk, úgy a modell gyorsabban és stabilabban fog konvergálni a lokális optimumokhoz.
 
 0.0001
 
