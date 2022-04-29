@@ -154,7 +154,7 @@ A kapott modellnek összesen 21 808 931 darab paramétere van, melyből csupán 
 
 Az optimaizálást a GAN tanításánál is használt Adam optimalizálóval végeztem, 0.0001 \textit{learning-rate} paraméterrel. A bemeneti dataset-et 32 elemű mini-batch-okra osztottam fel. A tanítást mindösszesen 10 epoch-ig futtattam. A nagy tanítóminta és a kevés tanítható paraméter miatt úgy figyeltem meg, hogy elegendő ennyi tanítás is. A konvergenciagörbe a Cifar-10 datasetre tanítva a \ref{fig:transfer_learning_loss} ábrán figyelhető meg.
 
-%TODO: Confusion matrix melléklése!
+%TODO: Confusion matrix melléklése és a loss ábra szépítése!!!
 
 Mivel a GAN tanítása után a Diszkriminátort elhagyjuk és további szerepe nincsen, úgy gondoltam, hogy akár hasonló módon is felhasználásra kerülhet, mint az előbbiekben ismertetett Inception modell. A tanulás során természetesen nem csupán a tanítóhalmazt látta a Diszkriminátor, hanem a generált képeket is, így elég specifikus tudással rendelkezik csupán. A háló súlyai úgy lettek optimalizálva, hogy belső reprezentációt állítson elő, amellyel a bináris osztályozást megfelelően el tudja végezni. Így a háló által kinyert jellegvektorok is oly módon állnak össze, hogy el tudja az alapján dönteni, hogy a kép valódi vagy hamis. A tanítást elvégeztem, viszont az így kapott összeállított új modell teljesítménye alulmaradt az Inception-t használó másik modellel szemben. A konvergencia görbe a \ref{fig:transfer_learning_loss_discriminator} ábrán figyelhető meg.
 
@@ -169,7 +169,9 @@ A bemeneti vektorok visszakeresése pedig a már ismertetett gradiens süllyeszt
 A bemeneti címkét \textit{One-Hot} enkódolással kell megadni a keresztentrópia számoláshoz, ugyanis az új osztályozó modell kimenete az adott osztályok valószínűségi értékei lesznek. A gradiens kereséssel pedig a keresztentrópia értéket kívánjuk csökkenteni. Tehát ha egy adott osztályra kívánunk egy olyan vektort kapni, amelyből a megfelelő osztályba tartozó képet ki tudja generálni a generátor, akkor ebben az esetben az osztályhoz tartozó valószínűségi érték 1 lesz, a többi osztályé pedig 0.
 Amennyiben kevert osztályra kívánunk képet generálni, úgy olyan keresendő one-hot enkódolást kell megadnunk, amelyben a kívánt osztályok megfelelő súlyokkal rendelkeznek. Mivel a GAN tere folytonosan van kitöltve, így feltehető, hogy létezik olyan pont a térben, amely egyszerre több osztály jellegzetességeit is magában hordozza. A \ref{fig:interpolation} ábrán is megfigyelhető, hogy az interpoláció mintavételezett pontjaiban a két végpont között milyen folytonos az átmenet és a köztes állapotokban mindkét pont tulajdonságai megjelennek.
 
-%TODO: A keresés optimélis paraméterei...
+%TODO: A keresés optimális paramétereire becslés, vagy hogy hogyan lehet kipróbálgatni, ajánlások a paraméterekre...
+
+%TODO: Input jelzése valahogy az ábrákon.
 
 \begin{figure}[h]
 	\centering

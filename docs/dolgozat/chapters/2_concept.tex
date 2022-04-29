@@ -21,7 +21,7 @@ Kiemelném az \textit{Inception modell}-t \cite{szegedy2015going}, amely a Googl
 
 Az irodalomkutatás során fellelt eredmények közül a legfigyelemreméltóbb eredmény a CLIP \textit{zero-shot} osztályozó \cite{radford2021learning}, amelyet az internetről összegyűjtött képeken és a hozzájuk tartozó szöveges leírásokon tanítottak be. A CLIP modell képes rövid leírásokat adni a kép tartalmáról és az egyes mondatokat valószínűségi értékekkel látja el. Vagyis a különféle annotációk helyett természetes-nyelvi leírásokat ad kimenetként egy-egy képhez. A modell az inverz problémakör egyes megvalósításában is feltűnik majd, amelyeket a következő alfejezetben ismertetek.
 
-%TODO: Eredmények szemléltetésére clip ábra
+%TODO: Eredmények szemléltetésére clip ábra vagy valami hasonló
 
 
 \Section{Az objektumfelismerés inverz problémája}
@@ -36,8 +36,6 @@ Egy olyan publikációt is találtam, amely figyelemreméltó módon nem generat
 
 A GAN és VAE részletesebb összehasonlítására egy későbbi fejezetben kerül sor. A saját módszeremhez szükséges képek előállítására szolgáló komponens alapjául, a különféle eredmények és a két módszer előnyeinek és hátrányainak figyelembe vételével úgy döntöttem, hogy egy GAN-t választom.
 A GAN-hoz is igen szerteágazó kutatási irányok alakultak ki az évek során, amelyekben a közös cél természetesen az eredeti GAN kiegészítése oly módon, hogy a betanított modell a lehető legjobb eredményeket nyújtsa.
-
-%TODO GAN hivatkozási gráf beillesztése, kis magyarázat írása az egyes irányokról és hogy mi az, amit átvettem belőlük...
 
 \begin{figure}[h]
 	\centering
@@ -93,6 +91,8 @@ from tensorflow import keras
 A dolgozathoz elkészült programokat \textit{IPython Jupyter notebook}-ok \cite{jupyter} formájában kerültek megvalósításra.
 
 \Section{Modellek tanítása}
+
+%TODO: Ezt is átnézni...
 
 A mély neurális hálózatok tanítása igazán erőforrás-igényes feladat. A tanítható hiperparaméterek paraméterek nem ritkán milliós nagyságrendűek, a dataset-eknek pedig kellően nagynak kell lenniük, a feldolgozandó adatoknak pedig memóriába is bele kell férnie. Egy-egy iteráció igen sok időbe telhet egy gyengébb hardveren.
 

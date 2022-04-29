@@ -97,7 +97,7 @@ A GAN modell súlyait a sztochasztikus gradiens algoritmussal szokás frissíten
 
 A Generátort és a Diszkriminátort a hibafüggvények alapján kiszámolt gradiensek alapján külön-külön kell tanítani. Különféle szerzők különböző optimalizáló módszerek használatát javasolják, az Adam \cite{kingma2014adam} és az RMSProp a két legnépszerűbb módszer.
 
-%TODO: Optimalizáló módszerek bemtatása!
+%TODO: Optimalizáló módszerek bemutatása akár egy ábrával vagy valami, hogy ez az alfejezet valahogy pontosabb legyen!
 
 \begin{python}
 generator_optimizer = keras.optimizers.Adam(1e-4)
@@ -345,7 +345,6 @@ A modell természetesen bővíthető tetszőlegesen nagy felbontásig, a felbont
 	%Ide jöhetne a class conditioning... hmmm
 \end{itemize}
 
-%TODO: Label conditionin példa pontosítás!
 %TODO: A problémák lehetnének külön alfejezetek a felsorolás helyet...
 
 \SubSection{Tanítás címkékkel}
@@ -437,9 +436,6 @@ def add_upsampling_unit(model,
 \end{figure}
 
 
-% TODO: A mode collapse és az egyéb dolgok ide
-% Ajánlások a kibővítésre, leírás
-
 \Section{Mode collapse jelenség}
 
 A Mode collapse jelenség alatt a tanulás során bekövetkező anomáliát értjük, amely hatására a Generátor a látens tér bármely pontjára ugyanolyan kimeneti képet generál. A képek között minimális változatosság ugyan megfigyelhető, ugyanakkor az is látható, hogy a képeken igen hasonló formák jelennek meg.
@@ -447,7 +443,7 @@ A Mode collapse jelenség alatt a tanulás során bekövetkező anomáliát ért
 Ez a jelenség valójában tekinthető egyfajta overfitting-nek is, vagyis túltanulásnak. Viszont a mode-collapse elnevezés találóbb, hiszen amikor ez bekövetkezik, akkor a további tanítási lépések során úgy tűnhet, hogy stablian tűnő modell hirtelen összeomlott volna.
 A mode-collapse fellépése esetén a model további tanítása során minden egyes epoch-al változik a mode, vagyis az előzőtől eltérő kép jelenik meg a kimeneten (szintén minden egyes mintavételezett pontra hasonló). Mivel a diszkriminátor a mini-batch minden egyes bemenetét egymástól függetlenül dolgozza fel, így a gradienseiben sem jelenik meg olyan információ, amely a generátort változatosabb képek generálására bíztatná. A mode collapse esetén a diszkriminátor egyetlen pontot képes csak valódi adatnak tekinteni, majd minden egyes frissítéssel a pont elmozdul, ezzel magyarázható, hogy az összeomlás után tanítva minden egyes iterációval változik ezen pont, amire \textit{mode}-ként szokás hivatkozni \cite{salimans2016improved} Vagyis a GAN modellünk használhatatlanná válik.
 
-"Helvetica scenario"
+"Helvetica scenario" %Mi ez?
 
 \begin{figure}[h]
 	\centering
@@ -459,8 +455,6 @@ A mode-collapse fellépése esetén a model további tanítása során minden eg
 A tanítás közben felléphetnek lokális mode-collapse-ok is, amelyek a látens-tér egyes tartományaiban alakulhat ki (Stackgan2-ben vizsgálták ezt).
 
 Egyes cikkekben az összeomlásig tanítják a felvázolt modelleket és az összeomlás előtti állapotokra állítják vissza a hálózat súlyait a használathoz \cite{brock2018large}
-
-%TODO: Mode collapse okok pontosabb leírása, detektálási technikák megnézése
 
 A GAN tanítása során nehézségekbe ütközhetünk. Legrosszabb esetben nem is kezd el konvergálni a generátor kimenete a tanítóminta képeihez, viszont abban az esetben gyanakodhatunk, hogy a modellünk nem lett helyesen felépítve. Amennyiben mégis elkezd fejlődni a modell és nem csak zaj jelenik meg a kimeneten az egyes tanítólépések után, de bizonyos számú epoch után mode collapse lép fel, úgy fontolóra vehetjük a következő regularizációs technikákat.
 
@@ -526,8 +520,7 @@ Ezen inicializációs stratégia pedig a ReLU aktivációs függvények családj
 
 A Keras a Glorot inicializálást használja alapértelmezetten.
 
-%TODO: Egyszerű példákkal szemléltetve az eredményeket.
-
+%TODO: Egyszerű példákkal és mérésekkel szemlétetni a technikákat... Konvergencia görbe, IS + FID score lemérése (Ha már ilyeneket dobálok, akkor annak az ismertetése lehetne ezek előtt is)
 
 \SubSection{Batch Normalization}
 Az instabil gradiensek problémája a tanítás során is jelentkezhet, a megfelelő inicializációs stratégia nem garantálja a teljes stabilitást, csupán egy kezdeti optimális állapotot biztosít a modellnek.
@@ -555,8 +548,6 @@ $$ z_i = \gamma \otimes \hat{x_i} + \beta$$
 
 Az algoritmus kimenete a $z_i$.
 
-(sok GAN architektúrában megfigyelhető (melyek azok?) de pl a ProGAN ehelyett Pixelwise-normalization-t használ a generátorban)
-
 
 \SubSection{Two Time-Scale Update Rule (TTUR)}
 Ezen technikát szintén meg lehet valósítani architektúrális változtatás nélkül, csupán az Adam optimalizáló eljárás egyik paraméterét kell megfelelően beállítani az implementációjához.
@@ -569,6 +560,18 @@ Heusel et al. \cite{heusel2017gans} cikkjében mérésekkel alátámasztották, 
 (különböző learning rate a generátorban és a diszkriminátorban)
 
 
+\begin{center}
+	\begin{tabular}{@{\extracolsep{6pt}} l c c c c }
+		\hline
+		& \multicolumn{2}{c}{\textbf{IS}} & \multicolumn{2}{c}{\textbf{FID}}\\
+		\cline{2-3} \cline{4-5}
+		& Cifar10 & AFHQ & Cifar10 & AFHQ\\
+		\hline
+		Eredeti modell & & & &\\
+		Regularizált modell & & & &\\
+		\hline
+	\end{tabular}
+\end{center}
 
 
 \Section{GAN teljesítmény mérés}
@@ -611,7 +614,7 @@ $$ \exp(\mathbb{E}_x KL(p(y|x)||p(y))) $$
 
 Minél magasabb ez a szám, annál jobb a GAN teljesítménye. Természetesen az IS is kijátszható és hamis eredményeket is adhat. (Note on IS-ben van róla szó)
 
-%TODO: Írni még erről gondolatokat, pontosítani
+%TODO: IS - írni még erről gondolatokat, pontosítani
 
 [Az inception score kódja]\\(https://github.com/openai/improved-gan/tree/master/inception\_score)
 TODO: Inception score implementálása Tensorflow 2-ben? Vagy az eredetivel kéne mérni? (Az még tf1-es)
@@ -620,14 +623,11 @@ TODO: Inception score implementálása Tensorflow 2-ben? Vagy az eredetivel kén
 \SubSection{Fréchet Inception Distance}
 Az Incepton Score kiegészítésére megjelent egy másik, széles körben elfogadott teljesítménymerő technika, a Fréchet Inception Distance (FID) \cite{heusel2017gans}. Az IS nem vette figyelembe a tanítóminta statisztikáit, és ez egy igen nagy hátránya a technikának. Továbbá az IS feltételein is javítottak, hogy a mintákon megtalálható zajok is befolyásolják a végső eredményt.
 
-%TODO: Pontosítás!!!
+%TODO: FID - Pontosítás!!! Az eredeti implementációk TF1-ben vannak, miért nem a 2-ben???
 
 Minél alacsonyabb az FID, annál jobb a modell teljesítménye az adott tanítómintán.
 
 $$ d^2((\boldsymbol{m}, \boldsymbol{C}), (\boldsymbol{m}_w, \boldsymbol{C}_w)) = \|\boldsymbol{m} - \boldsymbol{m}_w \|_2^2 + Tr(\boldsymbol{C} + \boldsymbol{C}_w - 2(\boldsymbol{C}\boldsymbol{C}_w)^{\frac{1}{2}}) $$
-
-%TODO: Összefoglaló táblázat, saját modellek eredményei, ábrák
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -684,4 +684,27 @@ Az egyértelműség érdekében a \textit{fromRGB} rétegek paraméterei a köve
 	\caption{Diszkriminátor több kimenettel $32 \times 32$ maximális felbontással}
 	\label{fig:msgDiscriminator}
 \end{figure}
-%TODO: Megírni ezt szépen, loss plot-ok összehasonlítása az eredeti modellel hasonló dataseten, meg ilyenek IS, FID
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=15cm]{images/dc_vs_msg.png}
+	\caption{Diszkriminátor több kimenettel $32 \times 32$ maximális felbontással}
+	\label{fig:dvvsmsg}
+\end{figure}
+
+%TODO: Lemérni az IS és FID score-okat
+\begin{center}
+	\begin{tabular}{@{\extracolsep{6pt}} l c c c c }
+		\hline
+		& \multicolumn{2}{c}{\textbf{IS}} & \multicolumn{2}{c}{\textbf{FID}}\\
+		\cline{2-3} \cline{4-5}
+		& Cifar10 & AFHQ & Cifar10 & AFHQ\\
+		\hline
+		DC-GAN & $4.4 \pm 0.43$ & $4.4 \pm 0.43$ & $11.3$ & $11.3$\\
+		MSG-GAN & $5.7 \pm 0.51$ & $4.4 \pm 0.43$ & $9.2$ & $9.2$\\
+		\hline
+	\end{tabular}
+\end{center}
+
+%TODO: Megírni ezt az MSG részt szépen
