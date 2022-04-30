@@ -259,12 +259,12 @@ Az alábbi táblázatokban összefoglalom az architektúra felépítését:
 \begin{tabular}{c c}
 
 \scriptsize{
-\begin{tabular}{ |l|c|r| }
+\begin{tabular}{@{\extracolsep{5pt}} |l c r| }
 	\hline
 	\multicolumn{3}{|c|}{\textbf{Generátor}} \\
 	\hline
-	Réteg & Aktivációs függvény & Kimenet\\
-	\hline
+	Réteg & Aktivációs fv & Kimenet\\
+	\cline{1-1} \cline{2-2} \cline{3-3}
 	Input & - & (100)\\
 	Reshape & - & (1, 1, 100)\\
 	(4x4) ConvT & ReLU & (4, 4, 512)\\
@@ -278,12 +278,12 @@ Az alábbi táblázatokban összefoglalom az architektúra felépítését:
 \end{tabular}}
 
 &\scriptsize{
-\begin{tabular}{ |l|c|r| }
+\begin{tabular}{@{\extracolsep{5pt}} |l c r| }
 	\hline
 	\multicolumn{3}{|c|}{\textbf{Diszkriminátor}} \\
 	\hline
-	Réteg & Aktivációs függvény & Kimenet\\
-	\hline
+	Réteg & Aktivációs fv & Kimenet\\
+	\cline{1-1} \cline{2-2} \cline{3-3}
 	Input & - & (64, 64, 3)\\
 	(4x4)Conv & ReLU & (32, 32, 64)\\
 	(4x4)Conv & ReLU & (16, 16, 128)\\
@@ -329,121 +329,34 @@ A hibaértékekből nem vonhatunk le pontos következtetéseket, így a fenti á
 
 \SubSection{Az architektúra gyengeségei, problémái}
 
-A modell természetesen bővíthető tetszőlegesen nagy felbontásig, a felbontást növelő rétegek számával. Viszont az architektúrával problémák léphetnek fel:
-\begin{itemize}
-	\item A modell ebben a formájában igen hajlamos az mode collapse-re, vagyis a tanulás során jelentkező összeomlásra.
-	\item A konvolúciós rétegek működéséből adódóan csupán lokális pixel-környezetekre képes összefüggő részeket generálni a modell.
-	Ez a működés alacsony felbontás mellett is anomáliákat idézhet elő, ilyen a képeken megfigyelhető ismétlődő, sakkmintás zaj. Ha a rejtett konvolúciós rétegek számával növelnénk a felbontást, akkor további nehézségbe is ütközünk: a modell nem lesz képes felismerni és megtanulni a tanítóminta képein megfigyelhető távoli, összefüggő tulajdonságokat. Így a generált képek részletezettsége alacsony lesz, gyakran blobokat figyelhetünk meg csupán, különböző textúrákkal. \cite{salimans2016improved}
+A felvázolt architektúra tanítása során különféle problémák jelentkezhetnek, amelyek a végeredményt kisebb nagyobb mértékben ronthatják.
 
-	A GAN tanítása igazán rapszodikus tud lenni. A paraméterek kisebb változtatása, a súlyok megfelelő inicializálása némileg kitolja a mode-collapse pillanatát. Viszont az előbbiekben felvázolt modell önmagában igen instabil marad a tanulás során. A tanítás stabilabbá tételére vonatkozó kutatások valójában a generált képek fotórealisztikusabbá tételével együtt fejlődtek. Például a \textit{Minibatch discrimination} \cite{salimans2016improved} technika alkalmazása, amely a Generált képek változatosságát kényszerítette ki a tanítás során vagy a \textit{Self-Attention} \cite{zhang2019self} rétegek alkalmazása a Generátorban és a Diszkriminátorban egyszerre növelték a képek minőségét és a stabilitást. Az említett regularizációs technikák is hasonló előnyökkel járnak, viszont egy külön alfejezetben csak azokat ismertettem részletesebben, amelyeket sikeresen tudtam használni a saját modellemben.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=13cm]{images/chessboard-patterns.png}
+	\caption{Jellegzetes zajok a generált képeken}
+	\label{fig:chessboard-patterns}
+\end{figure}
+
+
+\begin{itemize}
+	\item A modell ebben a formájában igen hajlamos az mode collapse-re, vagyis a tanulás során jelentkező összeomlásra. A jelenség és az elkerülésére irányuló néhány technika bemutatása a következő alfejezetekben kerül ismertetésre.
+	\item A konvolúciós rétegek működéséből adódóan csupán lokális pixel-környezetekre képes összefüggő részeket generálni a modell.\\
+	Ez a működés alacsony felbontás mellett is anomáliákat idézhet elő, ilyen a képeken megfigyelhető ismétlődő, sakktáblamintás zaj. Az említett zajra láthatunk példát a \ref{fig:chessboard-patterns} ábrán. Megoldásként a Dekonvolúciós rétegek helyett a Konvolúciós és bilineáris interpolációval alkalmazott UpSampling rétegeket használata javasolt \cite{odena2016deconvolution}.\\
+	Ha a rejtett konvolúciós rétegek számával növelnénk a felbontást, akkor további nehézségbe is ütközünk: a modell nem lesz képes felismerni és megtanulni a tanítóminta képein megfigyelhető távoli, összefüggő tulajdonságokat. Így a generált képek részletezettsége alacsony lesz, gyakran \textit{blobokat} figyelhetünk meg csupán, különböző textúrákkal. \cite{salimans2016improved}
+
+	A tanítás stabilabbá tételére vonatkozó kutatások valójában a generált képek fotórealisztikusabbá tételével együtt fejlődtek. Például a \textit{Minibatch discrimination} \cite{salimans2016improved} technika alkalmazása, amely a Generált képek változatosságát kényszerítette ki a tanítás során vagy a \textit{Self-Attention} \cite{zhang2019self} rétegek alkalmazása a Generátorban és a Diszkriminátorban egyszerre növelték a képek minőségét és a stabilitást.
 	
 	A felbontás növelésére például a \textit{StackGAN} \cite{zhang2017stackgan} kétszintű GAN modellt használ: az első szinten alacsonyabb felbontáson kerül kigenerálásra egy kép a bemeneti zajvektorból, majd egy teljesen független GAN hálózat Generátor bemeneteként fog szolgálni az alsó szint generátorának a kimenete, mint zajvektor. Így a második szinten nagyobb felbontásban is ki tud generálódni a megfelelő kép. A \textit{ProGAN} \cite{karras2017progressive} architektúra úgy oldotta meg az felbontás növelést és a globális összefüggőség biztosítását, hogy a modellt alacsony felbontáson kezdték tanítani, majd ha betanult az adott felbontásra a modell, új rétegekkel bővítették ki, hogy a kimeneti felbontás kétszereződjön. Az alacsonyabb felbontáson betanult jellegzetességeket a további tanítási állomásokon kiegészítésekre kerültek a magasabb felbontásokon. A ProGAN ihlette a \textit{Multi-Scale Gradient GAN} \textit{karnewar2020msg} architektúrát is, amelynek szintén a felbontásnövelés és a képek részletességének növelése volt a célja. A ProGAN-al ellentétben az Multi-Scale Gradient GAN architektúráját a tanítás során nem szükséges módosítani, ugyanis a Generátor több kimenettel rendelkezik, amelyen ugyanazon generált kép különféle felbontásai találhatóak, míg a Diszkriminátor több bemeneten várja a képeket, különböző felbontások mellett. Az architektúra némileg hasonlít az \textit{U-net}-hez \cite{ronneberger2015u}. A technika nem csupán részletes képeket ígér, de mindemellett a tanítást is stabilabbá teszi.
 	
 	\item A modellnek nincsen információja a különféle osztályokról, csupán a képek rendezetlen halmazán tanul, így magától kell megtanulnia a különféle osztályok jellegzetességeit.
-	Az általánosítás szempontjából ez előnyös is lehet, viszont ha merőben különböző osztályokra szeretnénk betanítani a modellt, akkor az úgynevezett \textit{class conditoning} nélkül ezt igen nehezen tudnánk megvalósítani.
-	
-	%Ide jöhetne a class conditioning... hmmm
+	Az általánosítás szempontjából ez előnyös is lehet, viszont ha merőben különböző osztályokra szeretnénk betanítani a modellt, akkor az úgynevezett \textit{class conditoning} technika válhat a segítségünkre. A technikát a saját modellemre is kipróbáltam, a későbbiekben ismertetésre kerül.
+
 \end{itemize}
-
-%TODO: A problémák lehetnének külön alfejezetek a felsorolás helyet...
-
-\SubSection{Tanítás címkékkel}
-
-A GAN alap esetben minták rendezetlen halmazán tanul. Viszont a legtöbb adathalmaz annotációkkal van ellátva, amelyeket így nem veszünk figyelembe a tanítás során és a modellre bízzuk, hogy megtanulja reprezentálni a tanítóhalmaz különféle objektumait. Ha szempont, hogy a GAN különféle osztályokra tudjon képeket generálni, akkor használhatjuk a Class Conditioning technikát \cite{mirza2014conditional}. Ezzel a modellnek egyfajta könnyítést is adhatunk a tanulás során, ha olyan adathalmazra végezzük el a tanítást, amely többfajta osztály objektumait tartalmazza. A technika alkalmazásával a modellünk nem a teljes adathalmazra próbál általánosítást találni, csupán az egyes osztályokra, ezzel is megkönnyítve a tanítást.
-
-Egyes eredményeknél megfigyelhető, hogy a tanítás során az adathalmaz tisztítására is nagy gondot fordítottak. Például az olyan GAN modelleknél, amelyeknél a felbontás növelését tűzték ki megoldandó problémaként. Az ilyen modelleknél egy széles körben alkalmazott adathalmaz a CELEB FACES, amely hollywoodi hírességek portréit tartalmazza. Az említett adathalmazt erősen módosították a szerzők, például a szemeket és az egyéb arci jellegzetességeket pozicionálták minden egyes elemnél.
-
-Ha a modellt olyan datasetre tanítjuk, amelyben hasonló objektumok találhatóak, akkor az így betanított GAN-okat domén-specifikusnak is nevezhetünk, hiszen a tudása csupán egy-egy osztály objektumaira korlátozódik. Egy-egy valós objektumok többféleképpen is le tudunk fényképezni és ezáltal leképezni egy két dimenziós térre, így a GAN modellnek az is segítség lehet, ha csak olyan képeket mutatunk neki a tanítás során, amelyeket fix pozíciókból fényképeztünk.
-Ilyen például a már említett hírességek portréit tartalmazó dataset is, amelyben csupán emberekről tartalmaz képeket és a legtöbb esetben a személy teljesen szemben áll a kamerával és rajta kívül nem látszik más a képen. Az általánosítás szempontjából ez egy nagy könnyítés lehet a modellnek.
-
-A fotórealisztikus eredményeket elérő modellek esetén kijelenthetjük, hogy nagy szerepe van a megfelelő adathalmaznak is. Továbbá az ilyen jellegű cikkeknél a data-augmentation technikák használata is előfordul. Az eredmények reprodukálása tehát igen sok mozgó paramétertől függhet.
-
-A class-conditioning technika alkalmazása során a generátor és a diszkriminátor egyszerre kerül kondícionálásra, vagyis minden egyes tanítási lépésnél a kondicionáló címkék meg fognak egyezni. Viszont a tanítás során nem ellenőrizzük le, hogy valóban helyesen lettek-e kondicionálva, hiszen továbbra is a megszokott kimenetekkel fog rendelkezni a generátor és a diszkriminátor is.
-
-A hibafüggvény a következőképpen írható fel:
-
-$$\min_{G}\max_{D}V(D, G) =  \mathbb{E}_{x \sim P(x)} \left[\ln D(x|y) \right] + \mathbb{E}_{z \sim P(z)} \left[\ln(1 - D(G(z|y))) \right]$$
-
-Egy-egy tanítási lépés során a generátor és a diszkriminátor is ugyan azt az $y$ címkét kapja bemenetként (Illetve a diszkriminátor $y$ címkéhez tartozó valós képeket).
-
-Az architektúrát minkét oldalon módosítani kell. A technikát felvázoló cikkben \cite{mirza2014conditional} kiemelték, hogy a $P(z)$ zajvektor és az $y$ címke kombinálására vonatkozólag a GAN keretrendszer igen rugalmas tud lenni. A rugalmasság a kombinálásra is vonatkozhat, a szerzők nem is kötötték meg, hogy milyen módon lehet összeilleszteni a $z$-t és $y$-t. Én az egyszerűség kedvéért egy multiply réteget választottam, hiszen így nem változik a bemeneti dimenziószám és a kondicionálást a generátor elején el lehet végezni. Viszont meg lehet fontolni több komponáló módot is, mint például a konkatenációt, vagy az add réteg használatát is. (Ki lehetne próbálni...)
-
-A $y$ címke a Cifar-10 adathalmaz esetében egy egész szám, amely 0 és 9 közötti értéket vehet fel. Az $y$ címkét egy \textit{embedding} réteg segítségével egy, a látens dimenzióval megegyező vektorrá alakítjuk, majd a $z$ zajvektorral való összeszorzás (vagy concat) előtt egy flattening réteggel a megfelelő formára hozzuk a kimeneti tensort.
-A \textit{multiply} réteg segítségével összeszorzásra kerül az vektorizált címke és a zajvektor, amelynek kimenete lesz a generátor modellünk bemenete. A generátor modell felépítése megegyezik a már ismert, korábban felvázolt generátor architektúrájával. 
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=13cm]{images/label_noise_embedding.png}
-	\caption{A zajvektor és a címke összeállítása a generátor bemeneteként}
-	\label{fig:labelnoiseembedding}
-\end{figure}
-
-A diszkriminátorban a kondicionálást a modell belsejében hajtom végre. Mivel a diszkriminátorunk a generátor tükörképének is tekinthető, így a diszkriminátor esetén nem a képpel együtt kerül be a címke a modellbe, hanem a modell által kinyert belső reprezentációkkal kerül összeszorzásra a címkét reprezentáló vektor, az utolsó teljesen összekapcsolt réteg előtt. A label conditioning technikát felvető cikkben megemlítették a \textit{dropout} réteg használatát is, így a teljesen összekapcsolt réteg előtt beillesztettem egy olyan réteget is.
-A diszkriminátor felépítése a \ref{fig:labeldiscriminator} ábrán látható.
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=13cm]{images/label_discriminator.png}
-	\caption{A belső reprezentá és a címke összeállítása a diszkriminátorban}
-	\label{fig:labeldiscriminator}
-\end{figure}
-
-A betanított háló kimeneteire példát a \ref{fig:labelconditioning} ábrán láthatunk, amely a már említett Cifar-10 adathalmaz 10 darab osztályára tanult be. A tanítás során megfigyeltem, hogy az osztályokon belül jelentkezik a mode-collapse jelensége, amely a regularizációs technikák alkalmazása mellett kordában tartható. Illetve a bemeneti zajvektor dimenziójának növelésével is némileg később jelentezett a mode-collapse, viszont egy ilyen kisebb példánál, 32x32-es felbontás mellett nem indokolt az 512 dimenziójú zajvektor használata, így ez nem tekinthető megoldásnak a mode-collapse, hiszen a modellek paramétereinek száma is megnövekedett a GAN-ban.
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=13cm]{images/label_conditioning.png}
-	\caption{Label conditioning tecnikával tanított Generátor kimenetei}
-	\label{fig:labelconditioning}
-\end{figure}
-
-
-\SubSection{Sakkmintázat kiküszöbölése}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=13cm]{images/chessboard-patterns.png}
-\caption{Jellegzetes zajok a generált képeken}
-\label{fig:chessboard-patterns}
-\end{figure}
-
-https://distill.pub/2016/deconv-checkerboard/
-
-A cikkben a Dekonvolúciós rétegek helyett a Konvolúciós és UpSampling rétegeket ajánlották bilineáris interpolációval. Vagyis a felbontásnövelési feladatot elvették a dekonvolúciós rétegtől és egy tanítható-paraméter nélküli rétegre bízták a feladatot, aminek csak annyi a szerepe, hogy a felbontást növelje. Ezzel az ötlettel a sakkmintás zajt igen jól leredukálták a generált képeken. A tanítás előtti Generátor kimenetén is megfigyelhető, hogy a kép "lágyabb", kevésbé rendezettebb, mint az előző példában.
-
-Viszont így önmagában nem volt szerencsém a modellt tanulásra bírnom és a BatchNormalization regularizációs rétegeket kellett beékelnem a modellbe. A technikát és a további alkalmazott regularizációs eljárásokat egy másik fejezetben foglalom majd össze.
-
-\begin{python}
-def add_upsampling_unit(model,
-                        filters, kernel_size):
-    model.add(
-        Conv2D(
-            filters=filters,
-            kernel_size=kernel_size,
-            padding='same',
-            activation="relu",
-            kernel_initializer="he_normal"
-        )
-    )
-    model.add(UpSampling2D())
-\end{python}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=10cm]{images/deconv-vs-conv_upsmpl.png}
-\caption{Tanítás előtti Generátor kimenetei}
-\label{fig:deconv-vs-conv_upsmpl}
-\end{figure}
-
 
 \Section{Mode collapse jelenség}
 
-A Mode collapse jelenség alatt a tanulás során bekövetkező anomáliát értjük, amely hatására a Generátor a látens tér bármely pontjára ugyanolyan kimeneti képet generál. A képek között minimális változatosság ugyan megfigyelhető, ugyanakkor az is látható, hogy a képeken igen hasonló formák jelennek meg.
-
-Ez a jelenség valójában tekinthető egyfajta overfitting-nek is, vagyis túltanulásnak. Viszont a mode-collapse elnevezés találóbb, hiszen amikor ez bekövetkezik, akkor a további tanítási lépések során úgy tűnhet, hogy stablian tűnő modell hirtelen összeomlott volna.
-A mode-collapse fellépése esetén a model további tanítása során minden egyes epoch-al változik a mode, vagyis az előzőtől eltérő kép jelenik meg a kimeneten (szintén minden egyes mintavételezett pontra hasonló). Mivel a diszkriminátor a mini-batch minden egyes bemenetét egymástól függetlenül dolgozza fel, így a gradienseiben sem jelenik meg olyan információ, amely a generátort változatosabb képek generálására bíztatná. A mode collapse esetén a diszkriminátor egyetlen pontot képes csak valódi adatnak tekinteni, majd minden egyes frissítéssel a pont elmozdul, ezzel magyarázható, hogy az összeomlás után tanítva minden egyes iterációval változik ezen pont, amire \textit{mode}-ként szokás hivatkozni \cite{salimans2016improved} Vagyis a GAN modellünk használhatatlanná válik.
-
-"Helvetica scenario" %Mi ez?
+A Mode collapse jelenség alatt a tanulás során bekövetkező azon anomáliát értjük, amely során a Generátor a látens tér bármely pontjára ugyanolyan kimeneti képet generál. A képek között minimális változatosság ugyan megfigyelhető, viszont a kigenerált minősége erősen romlik ilyen esetben. Előfordulhatnak olyan esetek is, amikor egy-egy megtanult képi jellegzetesség jelennek meg a kigenerált képeken teljesen indokolatlanul és ezen jellegek helyére kerülnek újak a további tanítási lépések alatt. A tanítás közben felléphetnek lokális mode-collapse-ok is, amelyek a látens-tér egyes tartományaiban alakulhatnak ki \cite{zhang2018stackgan++}.
 
 \begin{figure}[h]
 	\centering
@@ -452,13 +365,24 @@ A mode-collapse fellépése esetén a model további tanítása során minden eg
 	\label{fig:mode-collapse}
 \end{figure}
 
-A tanítás közben felléphetnek lokális mode-collapse-ok is, amelyek a látens-tér egyes tartományaiban alakulhat ki (Stackgan2-ben vizsgálták ezt).
+Ez a jelenség valójában tekinthető egyfajta \textit{overfitting}-nek is, vagyis túltanulásnak, hiszen a Generátor úgy tudja átverni a Diszkriminátort, hogy közben a modell használhatalan lesz. Viszont a mode-collapse elnevezés találóbb, hiszen amikor ez bekövetkezik, akkor a további tanítási lépések során úgy tűnhet, hogy stablian tűnő modell hirtelen összeomlott volna.
+A mode-collapse fellépése esetén a model további tanítása során minden egyes epoch-al változik a mode, vagyis az előzőtől eltérő kép jelenik meg a kimeneten (szintén minden egyes mintavételezett pontra hasonló). Mivel a diszkriminátor a mini-batch minden egyes bemenetét egymástól függetlenül dolgozza fel, így a gradienseiben sem jelenik meg olyan információ, amely a generátort változatosabb képek generálására bíztatná. A mode collapse esetén a diszkriminátor egyetlen pontot képes csak valódi adatnak tekinteni, majd minden egyes frissítéssel a pont elmozdul, ezzel magyarázható, hogy az összeomlás után tanítva minden egyes iterációval változik ezen pont, amire \textit{mode}-ként szokás hivatkozni \cite{salimans2016improved} Vagyis a GAN modellünk használhatatlanná válik.
 
-Egyes cikkekben az összeomlásig tanítják a felvázolt modelleket és az összeomlás előtti állapotokra állítják vissza a hálózat súlyait a használathoz \cite{brock2018large}
+Egyes szerzők munkájában kiemelik, hogy az összeomlásig tanítják a felvázolt modelleket és az összeomlás előtti állapotokra állítják vissza a hálózat súlyait a használathoz, mint például a BIG-GAN architektúra esetében is \cite{brock2018large}.
 
-A GAN tanítása során nehézségekbe ütközhetünk. Legrosszabb esetben nem is kezd el konvergálni a generátor kimenete a tanítóminta képeihez, viszont abban az esetben gyanakodhatunk, hogy a modellünk nem lett helyesen felépítve. Amennyiben mégis elkezd fejlődni a modell és nem csak zaj jelenik meg a kimeneten az egyes tanítólépések után, de bizonyos számú epoch után mode collapse lép fel, úgy fontolóra vehetjük a következő regularizációs technikákat.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=15cm]{images/mode_collapse_loss.png}
+	\caption{Mode collapse pillanata a hiba görbéken}
+	\label{fig:mode_collapse_loss}
+\end{figure}
+
+%TODO IS és FID detektálási módszer megemlítése, a görbékről egy kis magyarázattal szolgálni
+
 
 \Section{Regularizációs módszerek}
+A GAN tanítása során nehézségekbe ütközhetünk. Legrosszabb esetben nem is kezd el konvergálni a generátor kimenete a tanítóminta képeihez, viszont abban az esetben gyanakodhatunk, hogy a modellünk nem lett helyesen felépítve. Amennyiben mégis elkezd fejlődni a modell és nem csak zaj jelenik meg a kimeneten az egyes tanítólépések után, de bizonyos számú epoch után mode collapse lép fel, úgy fontolóra vehetjük a következő regularizációs technikákat.
+
 \SubSection{Label-smoothing}
 A label-smoothing az egyik legegyszerűbb regularizációs trükk, amely a neurális hálók overfitting problémáját kívánja kiküszöbölni. Ezen módszer alkalmazásához nem szükséges módosítanunk az architektúránkat, csupán a hibafüggvényt, így ez egy egészen egyszerűen implementálható technika. GAN esetében a diszkriminátor hibafüggvényét szokás módosítani oly módon, hogy a bináris keresztentrópia számolás során a valós bemeneti képek 1-es címke helyett valamennyivel alacsonyabb értéket, például 0.9-et kapnak. Ezzel a beállítással a diszkriminátor kevésbé lesz hajlamos a túlzott magabiztosságra a valós bemeneti képek esetén, teret adva a generátor fejlődésének.
 
@@ -520,8 +444,6 @@ Ezen inicializációs stratégia pedig a ReLU aktivációs függvények családj
 
 A Keras a Glorot inicializálást használja alapértelmezetten.
 
-%TODO: Egyszerű példákkal és mérésekkel szemlétetni a technikákat... Konvergencia görbe, IS + FID score lemérése (Ha már ilyeneket dobálok, akkor annak az ismertetése lehetne ezek előtt is)
-
 \SubSection{Batch Normalization}
 Az instabil gradiensek problémája a tanítás során is jelentkezhet, a megfelelő inicializációs stratégia nem garantálja a teljes stabilitást, csupán egy kezdeti optimális állapotot biztosít a modellnek.
 Az input adatok standardizálása áll a Batch Normalization technika mögött, amelyet a rétegek között vagy a rétegek aktivációs függvénye előtt ajánlott megtenni. A Batch Normalization technika alkalmazásához tehát minimálisan módosítanunk kell a meglévő modelljeink architektúráját. Viszont úgy figyeltem meg, hogy ezen technika alkalmazása teljesen empirikus módon történik és nincsen egy általánosan elfogadott módszer arra sem, hogy pontosan hol kell elhelyezni a réteget (az aktivációs függvények előtt vagy után vagy mindkét helyen bigGAN esetében mindenhova rakták, a többit meg kell néznem). A GAN esetében a kezdeti próbálkozásban csupán a diszkriminátorban (tényleg így van?) helyezték el a rétegeket (melyik cikkekben láttam ezt?), majd a generátorban is alkalmazásra került. Kétségtelen, hogy a technika alkalmazásával stabilabb tanítást eredményez és széleskörűen alkalmazható a mély neurális hálózatokban.
@@ -558,20 +480,6 @@ Heusel et al. \cite{heusel2017gans} cikkjében mérésekkel alátámasztották, 
 0.0004
 
 (különböző learning rate a generátorban és a diszkriminátorban)
-
-
-\begin{center}
-	\begin{tabular}{@{\extracolsep{6pt}} l c c c c }
-		\hline
-		& \multicolumn{2}{c}{\textbf{IS}} & \multicolumn{2}{c}{\textbf{FID}}\\
-		\cline{2-3} \cline{4-5}
-		& Cifar10 & AFHQ & Cifar10 & AFHQ\\
-		\hline
-		Eredeti modell & & & &\\
-		Regularizált modell & & & &\\
-		\hline
-	\end{tabular}
-\end{center}
 
 
 \Section{GAN teljesítmény mérés}
@@ -616,8 +524,7 @@ Minél magasabb ez a szám, annál jobb a GAN teljesítménye. Természetesen az
 
 %TODO: IS - írni még erről gondolatokat, pontosítani
 
-[Az inception score kódja]\\(https://github.com/openai/improved-gan/tree/master/inception\_score)
-TODO: Inception score implementálása Tensorflow 2-ben? Vagy az eredetivel kéne mérni? (Az még tf1-es)
+\footnote{Az Inception Score hivatalos implementációja: \url{https://github.com/openai/improved-gan/tree/master/inception\_score}.}
 
 
 \SubSection{Fréchet Inception Distance}
@@ -630,30 +537,85 @@ Minél alacsonyabb az FID, annál jobb a modell teljesítménye az adott tanít�
 $$ d^2((\boldsymbol{m}, \boldsymbol{C}), (\boldsymbol{m}_w, \boldsymbol{C}_w)) = \|\boldsymbol{m} - \boldsymbol{m}_w \|_2^2 + Tr(\boldsymbol{C} + \boldsymbol{C}_w - 2(\boldsymbol{C}\boldsymbol{C}_w)^{\frac{1}{2}}) $$
 
 
+\footnote{A Fréchet Inception Distance hivatalos implementációja: \url{https://github.com/bioinf-jku/TTUR}.}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\Section{A képgeneráló modell kibővítési lehetőségei}
 
-\Section{A képgeneráló modell egy kibővítése}
+A felvázolt GAN architektúra kiinduló alapként szolgálhat különféle háló típusokhoz. Az irodalomkutatás során talált megoldásokban is megfigyelhető, hogy a mély-konvolúciós szerkezeten alapuló megoldásokat alkalmaznak különféle kiegészítésekkel. A jobb eredmény érdekében igen szerteágazó kiegészítési javaslatok jelentek meg, ezen alfejezetben két kibővítési lehetőség kerül ismertetésere.
 
-A felvázolt architektúra kiegészítését a már említett \textit{Multi-Scale Gradient} \cite{karnewar2020msg} modell alapján tettem meg. Ugyan az architektúra implementálásával nem jártam sikerrel, hiába volt mellékelve részletes leírás és a kódbázis repozitóriuma a publikációhoz. Viszont a saját modellemet az U-net szerű kapcsolatokkal kiegészítve sokkal stabilabbá tudtam tenni és a képek minősége is növekedett némileg. Az eredeti és ezen modell eredményeinek összehasonlítására az alfejezet végén található táblázat és ábra.
+\SubSection{Tanítás címkékkel}
+
+A GAN alap esetben minták rendezetlen halmazán tanul. Viszont a legtöbb adathalmaz annotációkkal van ellátva, amelyeket így nem veszünk figyelembe a tanítás során és a modellre bízzuk, hogy megtanulja reprezentálni a tanítóhalmaz különféle objektumait. Ha szempont, hogy a GAN különféle osztályokra tudjon képeket generálni, akkor használhatjuk a \textit{Class Conditioning} technikát \cite{mirza2014conditional}. Ezen technika alkalmazása mellett a modellnek egyfajta könnyítést is adhatunk a tanulás során, ha olyan adathalmazra végezzük el a tanítást, amely többfajta osztály objektumait tartalmazza. A technika alkalmazásával a modellünk nem a teljes adathalmazra próbál általánosítást találni, csupán az egyes osztályokra. Így azt feltételezhetjük, hogy az osztályok tudatában könnyebben tud majd tanulni a modell.
+
+A class-conditioning technika alkalmazása során a generátor és a diszkriminátor egyszerre kerül kondícionálásra, vagyis minden egyes tanítási lépésnél a kondicionáló címkék meg fognak egyezni. Viszont a tanítás során nem ellenőrizzük le, hogy valóban helyesen lettek-e kondicionálva, hiszen továbbra is a megszokott kimenetekkel fog rendelkezni a generátor és a diszkriminátor is.
+
+A hibafüggvény a következőképpen írható fel:
+$$\min_{G}\max_{D}V(D, G) =  \mathbb{E}_{x \sim P(x)} \left[\ln D(x|y) \right] + \mathbb{E}_{z \sim P(z)} \left[\ln(1 - D(G(z|y))) \right]$$
+
+Egy-egy tanítási lépés során a generátor és a diszkriminátor is ugyan azt az $y$ címkét kapja bemenetként (Illetve a diszkriminátor $y$ címkéhez tartozó valós képeket). A kondícionálás lényegében csupán annyit jelent, hogy az egyes tanítási lépések során hasonló bemenetet kap a két modell és ezen bemenetet hasonlóan dolgozzák fel.
+
+Az architektúrát minkét oldalon módosítani kell a technika megvalósításához. Az eredeti cikkben \cite{mirza2014conditional} kiemelték, hogy a $P(z)$ zajvektor és az $y$ címke kombinálására vonatkozólag a GAN keretrendszer igen rugalmas tud lenni. A rugalmasság a kombinálásra is vonatkozhat, vagyis a szerzők nem is kötötték meg, hogy milyen módon lehet összeilleszteni a $z$-t és $y$-t. Én az egyszerűség kedvéért egy \textit{multiply} réteget választottam, hiszen így nem változik a bemeneti dimenziószám és a kondicionálást a generátor elején el lehet végezni. Viszont meg lehet fontolni több komponáló módot is, mint például a konkatenációt, vagy az \textit{add} réteg használatát is. De további vizsgálatot nem tettem meg ez irányban.
+
+A $y$ címke a Cifar-10 adathalmaz esetében egy egész szám, amely 0 és 9 közötti értéket vehet fel. Az $y$ címkét egy \textit{embedding} réteg segítségével egy, a látens dimenzióval megegyező vektorrá alakítjuk, majd a $z$ zajvektorral való összeszorzás előtt egy \textit{flatten} réteggel a megfelelő formára hozzuk a kimeneti tensort.
+A \textit{multiply} réteg segítségével összeszorzásra kerül az vektorizált címke és a zajvektor, amelynek kimenete lesz a generátor modellünk bemenete. A generátor modell felépítése megegyezik a már ismert, korábban felvázolt generátor architektúrájával.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=10cm]{images/label_noise_embedding.png}
+	\caption{A zajvektor és a címke összeállítása a generátor bemeneteként}
+	\label{fig:labelnoiseembedding}
+\end{figure}
+
+A diszkriminátorban a kondicionálást a modell belsejében hajtom végre. Mivel a diszkriminátorunk a generátor tükörképének is tekinthető, így a diszkriminátor esetén nem a képpel együtt kerül be a címke a modellbe, hanem a modell által kinyert belső reprezentációkkal kerül összeszorzásra a címkét reprezentáló vektor, az utolsó teljesen összekapcsolt réteg előtt. A label conditioning technikát felvető cikkben megemlítették a \textit{dropout} réteg használatát is, így a teljesen összekapcsolt réteg előtt beillesztettem egy olyan réteget is.
+A diszkriminátor felépítése a \ref{fig:labeldiscriminator} ábrán figyelhető meg.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=10cm]{images/label_discriminator.png}
+	\caption{A belső reprezentá és a címke összeállítása a diszkriminátorban}
+	\label{fig:labeldiscriminator}
+\end{figure}
+
+A betanított háló kimeneteire példát a \ref{fig:labelconditioning} ábrán láthatunk, amely a már említett Cifar-10 adathalmaz 10 darab osztályára tanult be. A tanítás során megfigyeltem, hogy az osztályokon belül jelentkezik a mode-collapse jelensége, amely a regularizációs technikák alkalmazása mellett valamelyest javítható, viszont nem sikerült úgy betanítani a modellt, hogy igazán változatos képeket generáljon. A bemeneti zajvektor dimenziójának növelésével is némileg később jelentezett a mode-collapse, viszont egy ilyen kisebb példánál, 32x32-es felbontás mellett nem indokolt az 512 dimenziójú zajvektor használata, így ez nem tekinthető megoldásnak a mode-collaps-re, hiszen a modellek paramétereinek száma is megnövekedett a GAN-ban.
+A technika másik hátránya, hogy az osztályok között igen éles határ alakul ki, vagyis nem lehet olyan bemeneti címkét megadni, aminek hatására kevert osztályokat is ki tudna generálni a modell. Minden esetben csupán egyetlen osztály képének megalkotására képes, még akkor is, ha nem egész értékeket adunk meg címkének. Két címke között interpolálva egyszerűen az egyik határponton átugrik a modell kimenete a következő címkének a kimenetére.
+
+A tanítás kiegyensúlyozatlansága miatt és a kevert osztályok reprezentálásának hiánya miatt úgy gondoltam, hogy nem ezen megoldás lesz számomra a legkedvezőbb.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=13cm]{images/label_conditioning.png}
+	\caption{Label conditioning tecnikával tanított Generátor kimenetei}
+	\label{fig:labelconditioning}
+\end{figure}
+
+\SubSection{Multi-Scale Gradient architektúra}
+
+Egy másik kiegészítésként a \textit{Multi-Scale Gradient}(MSG) \cite{karnewar2020msg} alapján több ki- és bemenettel láttam el a generátort és a diszkriminátort. Igyekeztem az eredeti modellemet kiegészíteni és alkalmazni az MSG-ben látottakat, vagyis az U-net szerű kapcsolatokat. Ugyan a \textit{Multi-Scale Gradient} architektúra implementálása nem hozta el az architektúrához publikált eredményeket, viszont a kigenerált képek minőségét valamelyest javította. Az eredeti és ezen modell eredményeinek összehasonlítására az alfejezet végén található táblázat és ábra.
 
 A kibővített modell Generátora összességében megegyezik az eredeti modellel, csupán több kimenettel rendelkezik. A belső rétegekben található reprezentációkból egy-egy konvolúciós réteg segítségével állítja elő a modell a kimeneteket. A korábban említett \textit{toRGB} rétegnek felelnek meg ezek a rétegek. Az aktivációs függvénye ezen rétegeknek a tangens hiperbolikus, hasonlóan az eredeti modell utolsó rétegéhez.
-
-A Generátorba került még minden dekonvolúciós réteg után egy-egy BatchNormalization réteg is.
+A Generátorba került még minden dekonvolúciós réteg után egy-egy BatchNormalization réteg is, továbbá alkalmazásra került a He-féle inicializálási stratégia is.
+A saját implementációmban a \textit{toRGB} konvolúciós réteg a következő táblázatban megfigyelhető paraméterekkel lett ellátva:
 
 \small{
 \begin{center}
-\begin{tabular}{ c|c|c|c|c }
+\begin{tabular}{@{\extracolsep{6pt}} c c c c c }
+	\hline
 	\multicolumn{5}{l}{\textbf{\textit{toRGB} konvolúciós réteg}} \\
 	\hline
 	Filterek száma & Kernelméret & Strides & Padding & Aktivációs függvény\\
-	\hline
+	\cline{1-1} \cline{2-2} \cline{3-3} \cline{4-4} \cline{5-5}
 	3 db & $4 \times 4$ & $1 \times 1$ & "same" & tangens hiperbolikus\\
+	\hline
 \end{tabular}
 \end{center}
 }
 
-A \ref{fig:msgGenerator} ábrán egy olyan generátor figyelhető meg, amely 4 kimenettel rendelkezik és rendre: $4 \times 4$, $8 \times 8$, $16 \times 16$ és $32 \times 32$ felbontású képeket generál egyszerre.
+A 4 darab \textit{toRGB} réteg további 46092 darab hiper-paramétert jelent, amelyek a tanítás során kerülnek finomhangolásra. Az eredeti modell milliós hiper-paraméter nagysága mellett nem tűnik olyan nagy kiegészítésnek. Viszont ezen rétegeknek is meg kell tanulnia a belső reprezentációk megfelelő leképzését a három színcsatornára.
+
+A \ref{fig:msgGenerator} ábrán egy olyan generátor figyelhető meg, amely 4 kimenettel rendelkezik és rendre: $4 \times 4$, $8 \times 8$, $16 \times 16$ és $32 \times 32$ felbontású képeket generál egyszerre. A kép nagysága miatt csupán $32 \times 32$  maximális felbontás került ábrázolásra.
 
 \begin{figure}[h]
 	\centering
@@ -661,19 +623,20 @@ A \ref{fig:msgGenerator} ábrán egy olyan generátor figyelhető meg, amely 4 k
 	\caption{Generátor több kimenettel $32 \times 32$ maximális felbontással}
 	\label{fig:msgGenerator}
 \end{figure}
-A 4 darab \textit{toRGB} réteg további 46092 darab hiper-paramétert jelent, amelyek a tanítás során kerülnek finomhangolásra.
 
-A Diszkriminátor modell architektúrája további módosításokat igényel. A bemeneteinek száma meg fog egyezni a Generátor kimeneteinek számával, a kapott képeket pedig a megfelelő helyre, a belső reprezentációihoz fűzi hozzá. A bemenetekből \textit{fromRGB} réteggel nyeri ki a feature-öket az összefűzéshez.
-Ezen konvolúciós rétegek feladata, hogy a három színcsatornával rendelkező képeket olyan reprezentációvá alakítsa át, amely az adott szint csatornaszámával megegyező csatornákat tartalmaz. Ezt úgy éri el, hogy a filterek számát a kívánt csatornaszámra állítjuk és "same" padding-ot alkalmazunk $ 1 \times 1 $ stride értékek mellett. A kernelméret jelen esetben $ 3 \times 3 $-as, mivel ezen plusz rétegek a megnövekedett filterszámokkal igen sok plusz hiperparamétert adnak az eredeti modellhez.
+A Diszkriminátor modell architektúrája további módosításokat igényel. A bemeneteinek száma meg fog egyezni a Generátor kimeneteinek számával, a kapott képeket pedig a megfelelő helyre, a belső reprezentációihoz fűzi hozzá. A bemenetekből \textit{fromRGB} réteggel nyeri ki a feature-öket az összefűzéshez. Ezen konvolúciós rétegek feladata, hogy a három színcsatornával rendelkező képeket olyan reprezentációvá alakítsa át, amely az adott szint csatornaszámával megegyező csatornákat tartalmaz. Ezt úgy éri el, hogy a filterek számát a kívánt csatornaszámra állítjuk és "same" padding-ot alkalmazunk $ 1 \times 1 $ stride értékek mellett. A kernelméret jelen esetben $ 3 \times 3 $-as, mivel ezen új rétegek a megnövekedett filterszámokkal igen sok további hiperparamétert adnak az eredeti modellhez.
 Az egyértelműség érdekében a \textit{fromRGB} rétegek paraméterei a következő táblázatban is összefoglalásra került:
+
 \small{
 	\begin{center}
-		\begin{tabular}{ c|c|c|c|c }
+		\begin{tabular}{@{\extracolsep{6pt}} c c c c c }
+			\hline
 			\multicolumn{5}{l}{\textbf{\textit{fromRGB} konvolúciós réteg}} \\
 			\hline
 			Filterek száma & Kernelméret & Strides & Padding & Aktivációs függvény\\
-			\hline
+			\cline{1-1} \cline{2-2} \cline{3-3} \cline{4-4} \cline{5-5}
 			Az adott szinttel megegyező & $3 \times 3$ & $1 \times 1$ & "same" & nincsen\\
+			\hline
 		\end{tabular}
 	\end{center}
 }
@@ -685,15 +648,25 @@ Az egyértelműség érdekében a \textit{fromRGB} rétegek paraméterei a köve
 	\label{fig:msgDiscriminator}
 \end{figure}
 
+A diszkriminátor is megőrizte az eredeti felépítését, viszont a \textit{fromRGB} rétegek igen sok további hiper-paramétert adnak hozzá a modellhez. Itt már milliós nagyságrendű új paraméter kerül a modellbe és ezen kiegészítés hatására az eredetileg 3,5 millió paraméterrel rendelkező modell máris 7,1 millió paraméterrel rendelkezik. Így nem érvényesül a korábban felállított tükörkép-szerkezet, vagyis amikor a diszkriminátor a generátor fordítottja. A \textit{fromRGB} rétegek filtereinek számának hatására nő meg a paraméterek száma ilyen nagy mértékben. A módszert bemutató cikkben többféle módon is vizsgálták a bemenet összefűzés előtti feldolgozását. A nyers bemeneti képeken nem alkalmaztak végül transzformációt és a cikkben felvázolt architektúrához az nyújtotta a legjobb megoldást. A saját implementációmat is ilyen módon készítettem el. Viszont azt figyeltem meg, hogy csupán a nyers képek hozzáfűzése mellett a modell először a legnagyobb felbontású képeket tanulja meg megfelelően kigenerálni és a tanítás során igen lassan kerülnek a súlyok olyan állapotban, hogy az alsóbb rétegek is megfelelően megtanulják a kimenet elkészítését.
 
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=15cm]{images/dc_vs_msg.png}
-	\caption{Diszkriminátor több kimenettel $32 \times 32$ maximális felbontással}
-	\label{fig:dvvsmsg}
+	\caption{A mély konvolúciós GAN és az MSG gan tanítása során mért hibaértékek az AFHQ adathalmazon tanítva}
+	\label{fig:dcvsmsg}
 \end{figure}
 
-%TODO: Lemérni az IS és FID score-okat
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=12cm]{images/msg_output.png}
+	\caption{Példa a generátor kimeneteire $64 \times 64$ maximális felbontás mellett}
+	\label{fig:msg_output}
+\end{figure}
+
+%TODO FID mérés!
+
 \begin{center}
 	\begin{tabular}{@{\extracolsep{6pt}} l c c c c }
 		\hline
@@ -701,10 +674,23 @@ Az egyértelműség érdekében a \textit{fromRGB} rétegek paraméterei a köve
 		\cline{2-3} \cline{4-5}
 		& Cifar10 & AFHQ & Cifar10 & AFHQ\\
 		\hline
-		DC-GAN & $4.4 \pm 0.43$ & $4.4 \pm 0.43$ & $11.3$ & $11.3$\\
-		MSG-GAN & $5.7 \pm 0.51$ & $4.4 \pm 0.43$ & $9.2$ & $9.2$\\
+		DC-GAN & $5.4394 \pm 0.276$ & $4.9611 \pm 0.1464$ & $11.3$ & $11.3$\\
+		MSG-GAN & $5.9588 \pm 0.1273$ & $6.0283 \pm 0.2169$ & $9.2$ & $9.2$\\
 		\hline
 	\end{tabular}
 \end{center}
 
-%TODO: Megírni ezt az MSG részt szépen
+%dcgan cifar10
+%(5.439416, 0.20759696)
+
+%msggan cifar10
+%(5.9587755, 0.12729427)
+
+%dcgan afhq
+%(4.9610844, 0.1464256)
+
+%msggan afhq
+%(6.0283036, 0.21691017)
+
+
+

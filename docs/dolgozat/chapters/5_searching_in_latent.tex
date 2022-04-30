@@ -22,10 +22,11 @@ A technika megvalósításához szükségünk van egy olyan függvényre, amely 
 A kimenet vizsgálatára általában egy osztályozót szokás alkalmazni, a következő alfejezetben az a módszer kerül majd bemutatásra. Viszont a bemenet optimalizálási módszere egy egyszerűbb vizsgálati stratégia mellett kerül bemutatásra az érthetőség növelése érdekében.
 
 %TODO: A jelölések egységesítése! (nem csak erre az alfejezetre vonatkozólag!)
-A GAN $G$ generátorának bemenete egy $\vec{z} \in \mathbb{R}^{z_n}$ vektor, ahol $z_n$ általában 100 szokott lenni. Vagyis a bemeneti vektor egy $z_n$ dimenziójú tér egy pontja. A 100 dimenzióban történő keresés igen nehéz lehet a hagyományos heurisztikus módszerekkel, mint például a hegymászó módszerrel. A hegymászó optimalizáló módszer során a célfüggvényt minimalizáljuk (vagy maximalizáljuk) a pont körüli tartomány mintavételezésével, majd a megfelelő szomszédos pontra való lépéssel. A bemeneti paraméter lehet a pont kiinduló pozíciója, a lépésköz és a mintavételezés sűrűsége. A megfelelő pontosság érdekében igen sok mintára lehet szükségünk és ez egy sokdimenziós térben igen sok minta szükséges a tér feltérképezésére. A fix lépésköz és a mintavételezés pontatlanságának hatására könnyedén lokális optimumokban ragadhat az algoritmus. Több vizsgálandó pont elszórása a térben megnövelheti az esélyét annak, hogy rátalálunk a globális optimumra is, viszont ez jelentősen megnöveli a számításigényt.
-A gradiens módszer vagy gradiens-süllyesztés (\textit{Gradient Descent}) egy olyan iteratív optimalizáló módszer, amely a differenciálható függvény lokális minimumának megtalására irányul. A célfüggvény elsőrendű deriváltjai igazítják el a vizsgált pontunkat a minimumhoz. \cite{ruder2016overview}
+A GAN $G$ generátorának bemenete egy $\vec{z} \in \mathbb{R}^{z_n}$ vektor, ahol $z_n$ általában 100 szokott lenni. Vagyis a bemeneti vektor egy $z_n$ dimenziójú tér egy pontja. A 100 dimenzióban történő keresés igen nehéz lehet a hagyományos heurisztikus módszerekkel, mint például a hegymászó módszerrel. A hegymászó optimalizáló módszer során a célfüggvényt minimalizáljuk (vagy maximalizáljuk) a pont körüli tartomány mintavételezésével, majd a megfelelő szomszédos pontra való lépéssel. A bemeneti paraméter lehet a pont kiinduló pozíciója, a lépésköz és a mintavételezés sűrűsége. A megfelelő pontosság érdekében igen sok mintára lehet szükségünk, egy sokdimenziós térben pedig igen sok minta szükséges a tér feltérképezésére. A fix lépésköz és a mintavételezés pontatlanságának hatására könnyedén lokális optimumokban ragadhat az algoritmus. Több vizsgálandó pont elszórása a térben megnövelheti az esélyét annak, hogy rátalálunk a globális optimumra is, viszont ez jelentősen megnöveli a számításigényt.
 
-Két kép között a pixelszintű távolságot az L2 norma vagy euklideszi norma segítségével kaphatjuk meg.
+A gradiens módszer vagy gradiens-süllyesztés (\textit{Gradient Descent}) egy olyan iteratív optimalizáló módszer, amely a differenciálható függvény lokális minimumának megtalására irányul. A célfüggvény elsőrendű deriváltjai igazítják el a vizsgált pontunkat a minimumhoz. \cite{ruder2016overview} A Gradiens módszer is fix lépésközökkel közelíti az optimumot, viszont ha a tér differenciálható, úgy a lépés iránya gyorsabban számolható mint a hegymászó módszer esetében. Az optimalizálás tehát a Gradiens módszer segítségével kerül megvalósításra.
+
+Két kép között a pixelszintű távolságot az L2 norma vagy euklideszi norma segítségével kaphatjuk meg. Ezen távolságot L2- vagy euklideszi távolságnak is lehet nevezni. A kép egyes pixeleinek értékeit veszi csupán figyelembe. Az összehasonlításhoz a képeket ki kell nyújtani, hogy egy-egy vektort kapjunk.
 
 $$ \|x\|_2 = \left({\sum_{i=1}^{n}|x_i|^2}\right)^{\frac{1}{2}} $$
 
@@ -35,10 +36,10 @@ A cél egy olyan $\vec{z} \in \mathbb{R}^{z_n}$ látens vektor keresése, amelly
 
 $$ \min\left(\sum_{i=1}^{n\times m}\sqrt{(X_i-G(\vec{z})_i)^2}\right)$$
 
-A képeket tehát pixelszinten hasonlítjuk össze kiindulásképp. Ez a távolságot szokás L2 távolságnak is nevezni, az L2 norma alapján, vagy euklideszi távolságnak is.
-Egyéb metrikákat is alkalmazhatunk a képek hasonlóságának mérésére, ilyen a PCA, a HOG, MSE, stb...
+A képeket tehát pixelszinten hasonlítjuk össze kiindulásképp.
+Egyéb metrikákat is alkalmazhatunk a képek hasonlóságának mérésére, viszont az optimalizáló módszer bemutatásához ezen legegyszerűbb módszert választottam.
 
-Legyen $l$ a lépésméret, $X \in \mathbb{R}^{n\times m \times 3}$ a keresendő kép, $G$ pedig a betanított generátor.
+Legyen $l$ a lépésméret, $X \in \mathbb{R}^{n\times m \times 3}$ a keresendő kép, $G$ pedig a betanított generátor. Jelöljük $t$-vel az időpillanatot.
 \begin{enumerate}
 	\item Generáljunk egy képet az aktuális $\vec{z}$ zajvektorral
 $$\hat X = G(\vec{z})$$
@@ -47,7 +48,7 @@ $$ loss = \sum_{i=1}^{n\times m}\sqrt{(X_i-\hat X_i)^2} $$
 	\item Számoljuk ki a gradienseket a hibafüggvény szerint
 $$ \vec{grad} = \frac{d}{d\vec{z}} \left[loss\right]$$
 	\item Módosítsuk a $\vec{z}$ zajvektor elemeit a kapott gradiensek szerint egy $l$ hosszúságú lépéssel
-$$ z_i = z_i - (l \cdot grad_i)$$
+$$ z_i^t = z_i^{t-1} - (l \cdot grad_i)$$
 	\item Ismételjük meg az algoritmust a konvergálásig.
 \end{enumerate}
 
@@ -69,25 +70,36 @@ for i in range(steps):
     noise = noise - (step_size * gradients)
 \end{python}
 
-Az implementációban ügyelni kell arra, hogy a gradiensek meghatározásához szükséges változókon ne hajtsunk végre a TensorFlow-on kívüli módosításokat, hiszen olyankor a TensorFlow nem képes visszakövetni a gradiens számolást. Tehát ha például a számolás során mátrix műveleteket kell alkalmazunk a változóinkra, akkor azt egy külső csomag, például Numpy segítségével sajnos nem tehetjük meg. Viszont a TensorFlow-ban is megtalálhatóak a Numpy csomagból ismert eljárások, sokszor teljesen megegyező névvel és paraméterezéssel.
+Az implementációban ügyelni kell arra, hogy a gradiensek meghatározásához szükséges változókon ne hajtsunk végre a TensorFlow-on kívüli módosításokat, hiszen olyankor a TensorFlow nem képes visszakövetni a gradiens számolást. Tehát ha például a számolás során mátrix műveleteket kell alkalmazunk a változóinkra, akkor azt egy külső csomag, például Numpy segítségével sajnos nem tehetjük meg. Viszont a TensorFlow-ban is megtalálhatóak a Numpy csomagból ismert eljárások, sokszor teljesen megegyező névvel és paraméterezéssel. Hogy a bemeneti zajvektort módosítani lehessen, egy \texttt{tf.Variable} objektumot inicializálunk a zaj értékével. Ha ezt nem tennénk meg, a generált zaj konstans lenne, amelyet a módszer nem tudna megváltoztatni.
 
-A Gradiens süllyesztés alap esetben fix lépésközökkel kerül végrehajtásra, viszont egy egyszerű kiegészítése lehet a módszernek a momentummal való kiegészítés. A momentum érték hatására a vizsgált pont nem csupán fix lépésekkel közlekedik a felületen, hanem egy lendületi érték hatására változik az iterációkban elvégzett lépés távolsága. A lendület az előző iterációban kiszámított gradiens értékektől függ,
+A Gradiens süllyesztés alap esetben fix lépésközökkel kerül végrehajtásra, viszont egy egyszerű bővítése lehet a módszernek a momentummal való kiegészítés. A momentum érték hatására a vizsgált pont nem csupán fix lépésekkel közlekedik a felületen, hanem a korábbi lépésköz figyelembe vételével változik az iterációkban elvégzett lépés távolsága.
 
-Jelöljük $t$-vel az időpillanatot.
+Momentum esetén a változás a következőképpen kapható meg:
+$$valtozas^t = l \cdot \vec{grad} + momentum \cdot valtozas^{t-1}$$
+$$z_i^t = z_i^{t-1} - valtozas^t $$
 
-$$ z_i^t = z_i^{t-1} - (l \cdot f'(z_i^{t-1})$$
+A momentum értékét 0 és 1 között szokás megadni. 0 momentum esetén valójában a momentum nélküli gradiens módszert kapjuk vissza.
 
-$$ valtozas^t = l \cdot f'(z_i^{t-1}) $$
+Az alábbi kódrészletben egy olyan függvény található, amelyben a momentummal kiegészített gradiens módszer van implementálva.
+\begin{python}
+def gradient_descent_momentum(goal_image, noise, step_size,
+                              momentum, steps):
+    change = 0
+    for i in range(steps):
+        with tf.GradientTape() as g_tape:
+            g_tape.watch(noise)
+            generated_image = generator(noise, training=False)
+            loss = tf.norm(goal_image - generated_image)
+        gradients = g_tape.gradient(loss, noise)
+        change = (step_size * gradients) + momentum * change
+        noise = noise - change
+    return noise
+\end{python}
 
-$$ z_i^t = z_i^{t-1} - valtozas^t $$
+A képek visszakeresésére $l=0.2$ lépésközzel és $0.9$ körüli momentum értékkel indítottam el az algoritmust. Ezen értékek megfelelőnek tűntek, viszont a paraméterek nagyban függnek a vizsgálandó generátortól. A kép felbontása, a látens dimenzió száma és a kiinduló zajtól is függ a paraméterek megválasztása.
+A kiinduló zajt a pixelszintű visszakeresésnél az egyenletes eloszlásból generáltam ki a [-1; 1] intervallumból. A bemeneti zajvektor eloszlása is egy olyan paraméter, amellyel érdemes kísérletezni.
 
-
-Momentum esetén a változás:
-$$ valtozas^t = l \cdot f'(z_i^{t-1}) + momentum \cdot valtozas^{t-1}$$
-
-
-momentum 0 - 1 között (0 esetén sima gradient descent)
-
+A \ref{fig:gradlosses} ábrán megfigyelhető a kétféle gradiens keresés során kapott hibaértékek változása, a kezdeti és a kiinduló zajvektor a keresés előtt és után, továbbá az ábra alján az egyes időpillanatokban kigenerált képek. Az ábrán megfigyelhető, hogy a momentum nélküli keresés során a konvergencia görbe sokkal simább, viszont hamar elér egy optimum pontot, amelyben megragad és nem képes ezután olyan nagy mértékben csökkenteni a hiba értéket. Ezzel szemben a momentummal történő keresés szemmel láthatóan átlépett ezen az optimumon a lendülete segítségével amikor a hibaértékei növekvő értékeket mutattak, majd egy olyan utat járt be, amely során jobban közelítette a keresendő zajvektort.
 
 \begin{figure}[h]
 \centering
@@ -96,6 +108,7 @@ momentum 0 - 1 között (0 esetén sima gradient descent)
 \label{fig:gradlosses}
 \end{figure}
 
+A \ref{fig:gradfound} ábrán a keresendő zajvektorból generált kép, a kiinduló zaj képe és a momentum nélküli és a momentummal talált kimenet figyelhető meg. A momentummal történő keresés pontosabb találatot eredményezett, a momentum nélkül pedig igen közeli lokális optimum pontot kaptunk.
 
 \begin{figure}[h]
 \centering
@@ -104,21 +117,29 @@ momentum 0 - 1 között (0 esetén sima gradient descent)
 \label{fig:gradfound}
 \end{figure}
 
-\newpage
+A \ref{fig:gradval} ábrán pedig egy, az adathalmaz validációs részéből kiválasztott képének visszakeresésének eredményét figyelhetjük meg. Ezen képet a GAN modell nem látta a tanulás során, viszont a kapott eredmény szemmel láthatóan egy corgi-t ábrázol, még ha nem is olyan kidolgozottan.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=8cm]{images/grad_search_val_image.png}
+	\caption{A validációs halmaz egyik elemének visszakeresése}
+	\label{fig:gradval}
+\end{figure}
+
 
 \Section{Képek keresése osztályozó segítségével}
 
 A képek visszakeresése pixel szinten csupán azokban az esetekben adhat igazán jó megoldást, amikor a Generátor egy korábbi kimenetére végezzük el a keresést. Az előbbiekben erre láthattunk példát, a \ref{fig:gradfound} ábrán is az figyelhető meg, hogy a korábban kigenerált kép bemeneti vektorát hogyan sikerült a gradienslejtési módszerekkel (momentum nélkül és momentummal) visszakeresni.
 Viszont ha egy külső forrásból érkező képet kívánunk így visszakeresni, akkor az eredményül kapott vektorból generált kép nem fogja olyan jól közelíteni a keresendő képet, hiába sikerült minimalizálnia a távolságot.
 Ez értelemszerűen abból adódik, hogy az algoritmus a keresés során a nyers pixelértékeket veszi csupán csak figyelembe, a kép tartalmára tehát semmiféle információja nincsen. Viszont a Generátor nem képes minden pixelét egymástól függetlenül változtatni, hiszen a dekonvolúciós rétegeknek köszönhetően betanulta a tanítóhalmaz jellegzetességeit és a kigenerált képek is a tanítóhalmaz eloszlását követik. Így nem létezhet olyan bemeneti vektor, amellyel tetszőleges pixelértékeket felvehet a kimeneti kép.
-Ha az eredeti adathalmazból  kívánunk képeket visszakeresni, akkor közelítő eredményeket kaphatunk, viszont ezek továbbra sem lesznek tökéletes találtatok, hiszen a GAN nem pixel pontosan tanulja be az adathalmaz elemeit, hanem azok jellegzetességeit tanulja meg reprezentálni, ezért is nevezik a GAN-t \textit{Representation-learning} \cite{geron2019hands} modellnek is.
+Ha az eredeti adathalmazból  kívánunk képeket visszakeresni, akkor közelítő eredményeket kaphatunk (mint ahogyan azt a \ref{fig:gradval} ábrán is látszik), viszont ezek továbbra sem lesznek tökéletes találtatok, hiszen a GAN nem pixel pontosan tanulja be az adathalmaz elemeit, hanem azok jellegzetességeit tanulja meg reprezentálni, ezért is nevezik a GAN-t \textit{Representation-learning} \cite{geron2019hands} modellnek is.
 
 Ha a hibafüggvényt kicseréljük és az optimalizációt egy, az adathalmazon tanított osztályozóval végezzük el, úgy viszonylag jó találatot kaphatunk. Természetesen ilyenkor az osztályozó teljesítményétől is függ az eredmény jósága.
-Az irodalomkutatás során egyetlen munkát találtam, amely publikálva is volt (CLIPDRAW\cite{frans2021clipdraw}) a további ismertebb munkák csupán notebook-ok formájában érhetőek el. Viszont a közös bennük, hogy mind a CLIP\cite{radford2021learning} osztályozó kimenetei alapján végzik el az optimalizációt.
+Az irodalomkutatás során egyetlen munkát találtam, amely publikálva is volt (CLIPDRAW\cite{frans2021clipdraw}), amely ilyen megoldást használ. A további ismertebb munkák csupán notebook-ok formájában érhetőek el. Viszont a közös bennük, hogy mind a CLIP\cite{radford2021learning} osztályozó kimenetei alapján végzik el az optimalizációt.
 
-Egy hasonló megoldást alkalmaztam, viszont a CLIP osztályozó helyett egy saját modellt tanítottam be. Az betanított osztályozó modell alapja az Inception v3, amely a témám során több helyen is feltűnt, az IS és FID pontok számítás is ezen modellen alapszik. Az ImageNet \cite{deng2009imagenet} adatbázison tanított Inception modell az adatbázis 1000 darab osztályára képes osztályozni. Ha a modellt használni kívánjuk a saját osztályozónkba, akkor az úgynevezett \textit{Transfer-learning} technikát kell alkalmazni a tanításhoz, amelynek lényege, hogy egy, már betanított általános modellre egy újabb modellt építünk, amely egy szűkebb, speciális feladat megoldására szánunk. Esetünkben nincs szükség 1000 darab osztályra. Viszont az Inception modell-t felhasználhatjuk a képek jellegeinek kinyerésére és a modell utolsó rétegét pedig kicseréljük a saját osztályozónkra.
+Egy hasonló megoldást alkalmaztam, viszont a CLIP osztályozó helyett egy saját modellt tanítottam be. Az betanított osztályozó modell alapja az Inception v3, amely a témám során több helyen is feltűnt, az IS és FID pontok számítás is ezen modellen alapszik. Az ImageNet \cite{deng2009imagenet} adatbázison tanított Inception modell az adatbázis 1000 darab osztályára képes osztályozni. Ha a modellt használni kívánjuk a saját osztályozónkba, akkor az úgynevezett \textit{Transfer-learning} \cite{tensorflow} technikát kell alkalmazni a tanításhoz, amelynek lényege, hogy egy, már betanított általános modellre egy újabb modellt építünk, amely egy szűkebb, speciális feladat megoldására szánunk. Esetünkben nincs szükség 1000 darab osztályra. Az Inception modell-t felhasználhatjuk a képek jellegeinek kinyerésére és a modell utolsó rétegét pedig kicseréljük a saját osztályozónkra. A kapott modell tanítása egyszerűbbé válik, mintha az alapoktól kellene egy új modellt betanítanunk.
 A tanítás során az eredeti modell súlyait lefagyasztjuk, vagyis a háló ezen részének paramétereit taníthatatlanná tesszük és a tanítás során csak az általunk hozzáadott rétegeket frissítjük.
-A hibafüggvény számoláshoz a Kategórikus Kereszt-entrópiát (Categorical Cross-Entropy) használjuk fel. Az osztályozó modell tanítása ezek után a teljesen megszokott módon történik.
+A hibafüggvény számoláshoz a Kategórikus Kereszt-entrópiát (\textit{Categorical Cross-Entropy}) használjuk fel. Az osztályozó modell tanítása ezek után a teljesen megszokott módon történik.
 
 Az alábbi kódrészletben az osztályozó modell implementációja figyelhető meg.
 
@@ -137,13 +158,14 @@ outputs = keras.layers.Activation("softmax")(x)
 model = keras.Model(inputs, outputs)
 \end{python}
 
-Az újonnan kialakított modell bemenete megegyezik a betanított Generátor kimenetével. Az overfitting elkerülése érdekében, és hogy a modell ne az egyes számára érdekes pixelértékek alapján hozza meg a döntést, a bemenetre data augmentation technika kerül alkalmazásra, amely random minimális transzformációkat alkalmaz a bemenetre. A bemeneti képeket véletlenszerűen függőlegesen tükrözi, és random elforgatást alkalmaz. A Cifar-10 adathalmaz esetében úgy figyeltem meg, hogy az augmentation technika csak megnehezíti a konvergenciát és a modell nagyon sokat tévedett ennek hatására. A technika kihagyásával a tanítás jobb eredményt hozott, viszont ezen adathalmaz sokkal több tanítómintával rendelkezik, mint az AFHQ és a benne található képek is változatosabbak, így esetében lehetséges, hogy valóban nem indokolt a technika használata.
+Az újonnan kialakított modell bemenete megegyezik a betanított Generátor kimenetével. Az \textit{overfitting} elkerülése érdekében, és hogy a modell ne az egyes számára érdekes pixelértékek alapján hozza meg a döntést, a bemenetre \textit{data augmentation} technika kerül alkalmazásra, amely random minimális transzformációkat alkalmaz a képekre. A bemeneti képeket véletlenszerűen függőlegesen tükrözi, és random elforgatja. A Cifar-10 adathalmaz esetében úgy figyeltem meg, hogy az augmentation technika csak megnehezíti a konvergenciát és a modell nagyon sokat tévedett ennek hatására. A technika kihagyásával a tanítás jobb eredményt hozott, viszont ezen adathalmaz sokkal több tanítómintával rendelkezik, mint az AFHQ és a benne található képek is változatosabbak, így esetében lehetséges, hogy valóban nem indokolt a technika használata.
 
-Az \texttt{inception\_model} a kódrészletben a már említett, csonkított változata az eredetinek. Az utolsó \texttt{Dense} rétegétől megfosztott változata, a lefagyasztott súlyokkal. Az Inception modell bemenetként $299 \times 299$ felbontású képet vár, így a képünket fel kell nagyítani a kívánt felbontásra. A nagyításhoz nearest interpolációt alkalmaztam, hogy a felbontás növelése ne járjon homályossággal, ugyanis azt figyeltem meg, hogy olyankor a modell gyengébben teljesít. (Ezt is le lehetne mérni?)
-A csonkított Inception modell Kimenete egy (8, 8, 2048) alakú tensor, amely a bemeneti képekből kinyert feature-öket tartalmazza. A \texttt{GlobalAveragePooling2D} réteg az előbbi kimenetből 2048 elemű vektort készít, amelyet beadhatunk az utolsó \texttt{Dense} rétegnek, amely az osztályozást végzi el. Egy regularizációs technikaként, hogy csökkentsük az overfitting esélyét, egy \texttt{Dropout} réteg is helyet kapott a teljesen összekapcsolt réteg előtt.
+Az \texttt{inception\_model} a kódrészletben a már említett, csonkított változata az eredetinek. Az utolsó \texttt{Dense} rétegétől megfosztott változata, a lefagyasztott súlyokkal. Az Inception modell bemenetként $299 \times 299$ felbontású képet vár, így a képünket fel kell nagyítani a kívánt felbontásra. A nagyításhoz \textit{nearest} interpolációt alkalmaztam, hogy a felbontás növelése ne járjon homályossággal, ugyanis azt figyeltem meg, hogy olyankor a modell gyengébben teljesít.
+
+A csonkított Inception modell kimenete egy (8, 8, 2048) alakú tensor, amely a bemeneti képekből kinyert feature-öket tartalmazza. A \texttt{GlobalAveragePooling2D} réteg az előbbi kimenetből 2048 elemű vektort készít, amelyet beadhatunk az utolsó \texttt{Dense} rétegnek, amely az osztályozást végzi el. Egy regularizációs technikaként, hogy csökkentsük az overfitting esélyét, egy \texttt{Dropout} réteg is helyet kapott a teljesen összekapcsolt réteg előtt.
 A kimenetet \texttt{softmax} aktivációs függvénnyel normalizáljuk, így a modell használata során kimenetként megkapjuk az egyes osztályokhoz tartozó valószínűségi értékeket.
 
-A kapott modellnek összesen 21 808 931 darab paramétere van, melyből csupán 6147 a tanítható paraméter. A tanítás során tehát az osztályozásért felelős rétegeket kell frissítenünk.
+A kapott modellnek összesen 21 808 931 darab paramétere van, melyből csupán 6147 a tanítható. A tanítás során tehát az osztályozásért felelős rétegeket kell csupán frissítenünk.
 
 \begin{figure}[h]
 	\centering
@@ -152,7 +174,7 @@ A kapott modellnek összesen 21 808 931 darab paramétere van, melyből csupán 
 	\label{fig:transfer_learning_loss}
 \end{figure}
 
-Az optimaizálást a GAN tanításánál is használt Adam optimalizálóval végeztem, 0.0001 \textit{learning-rate} paraméterrel. A bemeneti dataset-et 32 elemű mini-batch-okra osztottam fel. A tanítást mindösszesen 10 epoch-ig futtattam. A nagy tanítóminta és a kevés tanítható paraméter miatt úgy figyeltem meg, hogy elegendő ennyi tanítás is. A konvergenciagörbe a Cifar-10 datasetre tanítva a \ref{fig:transfer_learning_loss} ábrán figyelhető meg.
+Az optimalizálást a GAN tanításánál is használt Adam optimalizálóval végeztem, 0.0001 \textit{learning-rate} paraméterrel. A bemeneti dataset-et 32 elemű mini-batch-okra osztottam fel. A tanítást mindösszesen 10 epoch-ig futtattam. A nagy tanítóminta és a kevés tanítható paraméter miatt úgy figyeltem meg, hogy elegendő ennyi tanítás is. A konvergenciagörbe a Cifar-10 datasetre tanítva a \ref{fig:transfer_learning_loss} ábrán figyelhető meg.
 
 %TODO: Confusion matrix melléklése és a loss ábra szépítése!!!
 

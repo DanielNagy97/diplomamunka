@@ -126,13 +126,15 @@ Egy fórumon böngészve találtam rá a Kaggle \cite{kaggle} felületre, amely 
 
 Az alábbi táblázatban található meg a laptopom és a Kaggle által biztosított környezet specifikációi:
 \begin{center}
-\begin{tabular}{ p{1.2cm}||p{6cm}|p{6cm}  }
-	  & Dell Insprion-5558 & Kaggle környezet\\
+\begin{tabular}{@{\extracolsep{6pt}} l r r }
 	\hline
-	\textbf{CPU} & 4x Intel(R) Core(TM) i3-5005U CPU @ 2.00GHz & 2x Intel(R) Xeon(R) CPU @ 2.00GHz\\
+	  & \multicolumn{1}{c}{\textit{Dell Insprion-5558}} & \multicolumn{1}{c}{\textit{Kaggle környezet}}\\
+	\cline{2-2} \cline{3-3}
+	\textbf{CPU} & Intel Core i3-5005U CPU 4x 2.00GHz & Intel Xeon CPU 2x 2.00GHz\\
 	\textbf{RAM} & 2x 4GB DDR3 1600 MHz & 15GB\\
 	\textbf{GPU} & Intel HD Graphics 5500 (VGA) & Nvidia Tesla P100-PCIE-16GB\\
-	\textbf{HDD} & 1TB & 73GB
+	\textbf{HDD} & 1TB & 73GB\\
+	\hline
 \end{tabular}
 \end{center}
 A három környezet (laptop, Colab, Kaggle) teljesítményét egy általam felállított méréssel vizsgáltam.
@@ -140,10 +142,12 @@ A \texttt{RuntimeMeasure.ipynb} notebook használatos a mérés elvégzéséhez.
 A teljesítménymérés alapja egy olyan GAN hálózat, amelyet meghatározott paraméterekkel hozunk létre.
 A tanítás során az alábbi paraméterek változatlanok:
 \begin{center}
-\begin{tabular}{ c|c|c|c }
-	Látens dimenziószám & mini-batch méret & filterek száma & kernelméret\\
+\begin{tabular}{@{\extracolsep{6pt}} c c c c }
 	\hline
-	100 & 32 & 128 & ($3\times 3$)
+	Látens dimenziószám & mini-batch méret & filterek száma & kernelméret\\
+	\cline{1-1} \cline{2-2} \cline{3-3} \cline{4-4}
+	100 & 32 & 128 & ($3\times 3$)\\
+	\hline
 \end{tabular}
 \end{center}
 A felbontásnövelő rétegek száma a futó paraméter, amelyet 0-tól 3-ig vizsgálunk.
@@ -191,12 +195,36 @@ Ha kiválasztottuk a modellünkhöz megfelelő adathalmazt, akkor a probléma é
 
 Az irodalomkutatás során talált egyes GAN modellek esetén megfigyelhető, hogy a fotórealisztikus eredmény érdekében a tanításhoz használt adathalmazt erősen tisztították és általában egyetlen egy doménból származnak az adatok. Tehát pédául a CelebFaces vagy az Oxford Flowers vagy a CUB esetében.
 
-%TODO: Példák az adathalmaz elemeire, pontosítás
-
 \begin{itemize}
 	\item Animal Faces-HQ (AFHQ) \cite{choi2020stargan}\\
 		Az adathalmaz állatokról tartalmaz portrékat igen jó minőségben. A színes fényképek felbontása $ 512 \times 512 $, az állatok fotói pedig pozicionálva vannak a szemük szerint. Tehát igen tisztának lehet nevezni az adathalmazt. A dataset-et bevezető publikációban azt is megemlítik, hogy kézi szelektálást is végeztek, hogy a lehető legjobb minőségű legyenek a minták. A mintákat 3 osztályban adták meg: Kutya, macska és vadállat. Az osztályokban egyenként 5000 tanítóminta található, így összesen 15 ezer képből áll az adathalmaz. A kevés osztály ellenére az osztályokon belül igen változatos képek figyelhetők meg, a fajok különböző alfajaira.
+		
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=10cm]{images/afhq_dataset_samples.png}
+			\caption{Minták az AFHQ adathalmazból}
+			\label{fig:afhq_dataset_samples}
+		\end{figure}
+	
 	\item Cifar-10 \cite{krizhevsky2009learning}
 		A Cifar-10 adathalmaz valójában a Cifar-100 adathalmaznak egy leszűkített változata. Az utóbbi 100 osztályt magába foglaló adathalmaz, míg a Cifar-10 csupán 10 class-al rendelkezik. A tanítóhalmaza 50000 képet tartalmaz.
 		Az adathalmaz képei ($32 \times 32$) felbontásúak és 3 színcsatornával rendelkeznek (RGB).
+		
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=10cm]{images/cifar10_dataset_samples.png}
+			\caption{Minták a Cifar10 adathalmazból}
+			\label{fig:cifar10_dataset_samples}
+		\end{figure}
 \end{itemize}
+
+
+%%% A class conditioningból kimásolva,
+%TODO: Az adathalmazok bevezetőjébe ezt beleolvasztani
+
+Egyes eredményeknél megfigyelhető, hogy a tanítás során az adathalmaz tisztítására is nagy gondot fordítottak. Például az olyan GAN modelleknél, amelyeknél a felbontás növelését tűzték ki megoldandó problémaként. Az ilyen modelleknél egy széles körben alkalmazott adathalmaz a CELEB FACES, amely hollywoodi hírességek portréit tartalmazza. Az említett adathalmazt erősen módosították a szerzők, például a szemeket és az egyéb arci jellegzetességeket pozicionálták minden egyes elemnél.
+
+Ha a modellt olyan datasetre tanítjuk, amelyben hasonló objektumok találhatóak, akkor az így betanított GAN-okat domén-specifikusnak is nevezhetünk, hiszen a tudása csupán egy-egy osztály objektumaira korlátozódik. Egy-egy valós objektumot többféleképpen is le tudunk fényképezni és ezáltal leképezni egy két dimenziós térre, így a GAN modellnek az is segítség lehet, ha csak olyan képeket mutatunk neki a tanítás során, amelyeket fix pozíciókból fényképeztünk.
+Ilyen például a már említett hírességek portréit tartalmazó dataset is, amelyben csupán emberekről tartalmaz képeket és a legtöbb esetben a személy teljesen szemben áll a kamerával és rajta kívül nem látszik más a képen. Az általánosítás szempontjából ez egy nagy könnyítés lehet a modellnek.
+
+A fotórealisztikus eredményeket elérő modellek esetén kijelenthetjük, hogy nagy szerepe van a megfelelő adathalmaznak is. Továbbá az ilyen jellegű cikkeknél a data-augmentation technikák használata is előfordul. Az eredmények reprodukálása tehát igen sok mozgó paramétertől függhet.
