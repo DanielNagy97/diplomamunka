@@ -170,22 +170,35 @@ A kapott modellnek összesen 21 808 931 darab paramétere van, melyből csupán 
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=8cm]{images/transfer_inception.png}
-	\caption{Transfer-learning loss ábra (Inception modell)}
+	\caption{Transfer-learning loss ábra (Inception modell alapú)}
 	\label{fig:transfer_learning_loss}
 \end{figure}
 
 Az optimalizálást a GAN tanításánál is használt Adam optimalizálóval végeztem, 0.0001 \textit{learning-rate} paraméterrel. A bemeneti dataset-et 32 elemű mini-batch-okra osztottam fel. A tanítást mindösszesen 10 epoch-ig futtattam. A nagy tanítóminta és a kevés tanítható paraméter miatt úgy figyeltem meg, hogy elegendő ennyi tanítás is. A konvergenciagörbe a Cifar-10 datasetre tanítva a \ref{fig:transfer_learning_loss} ábrán figyelhető meg.
 
-%TODO: Confusion matrix melléklése és a loss ábra szépítése!!!
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=15cm]{images/transfer_confusion.png}
+	\caption{Confusion mátrix (Inception modell alapú)}
+	\label{fig:transfer_confusion}
+\end{figure}
 
 Mivel a GAN tanítása után a Diszkriminátort elhagyjuk és további szerepe nincsen, úgy gondoltam, hogy akár hasonló módon is felhasználásra kerülhet, mint az előbbiekben ismertetett Inception modell. A tanulás során természetesen nem csupán a tanítóhalmazt látta a Diszkriminátor, hanem a generált képeket is, így elég specifikus tudással rendelkezik csupán. A háló súlyai úgy lettek optimalizálva, hogy belső reprezentációt állítson elő, amellyel a bináris osztályozást megfelelően el tudja végezni. Így a háló által kinyert jellegvektorok is oly módon állnak össze, hogy el tudja az alapján dönteni, hogy a kép valódi vagy hamis. A tanítást elvégeztem, viszont az így kapott összeállított új modell teljesítménye alulmaradt az Inception-t használó másik modellel szemben. A konvergencia görbe a \ref{fig:transfer_learning_loss_discriminator} ábrán figyelhető meg.
 
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=8cm]{images/transfer_discriminator.png}
-	\caption{Transfer-learning loss ábra (Inception modell)}
+	\caption{Transfer-learning loss ábra (Diszkriminátor modell alapú)}
 	\label{fig:transfer_learning_loss_discriminator}
 \end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=15cm]{images/transfer_discriminator_confusion.png}
+	\caption{Confusion mátrix (Diszkriminátor modell alapú)}
+	\label{fig:transfer_confusion_disc}
+\end{figure}
+
 
 A bemeneti vektorok visszakeresése pedig a már ismertetett gradiens süllyesztés módszerrel valósul meg, viszont a hibafüggvény számolása a Kategórikus Kereszt-entrópia által kerül meghatározásra, hasonlóan, mint az osztályozó tanításánál. Az algoritmus bemenete tehát a kezdeti zajvektor, a keresendő címke és a gradiens módszer paraméterei (a lépésköz, a momentum és az iterációszám).
 A bemeneti címkét \textit{One-Hot} enkódolással kell megadni a keresztentrópia számoláshoz, ugyanis az új osztályozó modell kimenete az adott osztályok valószínűségi értékei lesznek. A gradiens kereséssel pedig a keresztentrópia értéket kívánjuk csökkenteni. Tehát ha egy adott osztályra kívánunk egy olyan vektort kapni, amelyből a megfelelő osztályba tartozó képet ki tudja generálni a generátor, akkor ebben az esetben az osztályhoz tartozó valószínűségi érték 1 lesz, a többi osztályé pedig 0.
@@ -195,7 +208,6 @@ Amennyiben kevert osztályra kívánunk képet generálni, úgy olyan keresendő
 Az eljárás optimális paraméterei ebben az esetben is több tényezőtől függnek. Az osztályozó modell teljesítménye, az osztályok száma is igen nagy befolyásoló tényező lehet a megfelelő lépésköz és momentum kiválasztására.  Megfigyeléseim szerint a megfelelő eredmények elérése érdekében a lépésközt a pixelszintű kereséstől is alacsonyabbra érdemes választani, például $l=0.005$ lépésközzel és $0.09$-es momentum értékkel az AFHQ adathalmazon tanult modellekkel értékelhető találatokat kaphatunk. A túl magas lépésköz hatására a keresés során a látens tér olyan területeire is tévedhet az algoritmus, amelyre a generátor szaturált képeket tud előállítani csupán.
 
 A \ref{fig:collapsed_mode} ábrán is szemléltetett, a generátorban kialakuló összeomlott-mode-ok a keresési folyamat során is bosszúságot okozhatnak. Amint belépünk egy ilyen területre a keresés során, az algoritmus nem képes kilépni, hiszen az osztályozó egyszerre látja mindegyik osztály jellegzetességeit a vizsgált képen.
-%TODO: A keresés optimális paramétereire becslés, vagy hogy hogyan lehet kipróbálgatni, ajánlások a paraméterekre...
 
 %TODO: Input jelzése valahogy az ábrákon.
 

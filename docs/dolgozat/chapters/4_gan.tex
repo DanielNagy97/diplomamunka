@@ -1,12 +1,12 @@
 \Chapter{Új adatok előállítása, generatív modellek}
-A generatív modellek alatt olyan gépi-tanulásos architektúrákat értünk, amelyek célja, hogy új adatot állítson elő. A létrejött adatnak hasonlítania kell a tanítómintához, vagyis a generált minták eloszlásának közelítenie kell a valós adatok eloszlását. Az ilyen modelleknek meg kell tanulnia a tanítóminta jellegzetességeit és azt is, hogy ezen jellegeket a belső reprezentációjából hogyan tudná értelmezhető formában előállítani. A generatív modellek esetében ha a modell a tanítóminta képeit generálná csupán vissza pixel-pontosan, úgy a modell elveszti célját és egyfajta ovefitting-nek tekinthetnénk a jelenséget.
+A generatív modellek alatt olyan gépi-tanulásos architektúrákat értünk, amelyek célja, hogy új adatokat állítsanak elő. A létrejött adatnak hasonlítania kell a tanítómintához, vagyis a generált minták eloszlásának közelítenie kell a valós adatok eloszlását. Az ilyen modelleknek meg kell tanulnia a tanítóminta jellegzetességeit és azt is, hogy ezen jellegeket a belső reprezentációjából hogyan tudná értelmezhető formában előállítani. A generatív modellek esetében ha a modell a tanítóminta képeit generálná csupán vissza pixel-pontosan, úgy a modell elveszti célját és egyfajta ovefitting-nek tekinthetnénk a jelenséget.
 
 Az Autoencoder egy olyan statisztikai elveken alapuló architektúra, amelynek célja, hogy a tanítóhalmaz jellegzetességeit feltérképezze és olyan formába kódolja a tulajdonságokat, hogy azokból az eredeti adat visszaállítható legyen. Az architektúra lényegében egy nehezen kezelhető sűrűségfüggvényt definiál, egy látens taggal, így ebben az esetben nem lehet közvetlenül optimalizálni, nem úgy mint például a pixelRNN/pixelCNN generatív modellek esetében \cite{oord2016conditional}, hanem az úgynevezett \textit{evidence lower bound} (ELBO) mértékegységre kell optimalizálni\cite{oord2017neural}. Az architektúra két komponense az Encoder, amely előállítja a jellegvektorokat a bemenet alapján és a Decoder, amely a jellegvektorokból visszaállítja az adatot. Tehát ebben az esetben a cél az, hogy egy olyan reprezentációt készítsünk a tanítómintáról, amely alapján az teljes mértékben visszaállítható legyen. Egyfajta tömörítési folyamatnak is felfogható az encoder működése. Egy módosított változattal az encoder által létrehozandó látens tér olyan formában áll elő, amelyből véletlenszerűen is vehetünk mintákat és dekódolva teljesen új adat áll elő. Ezt a módszert Vector Quantised-Variational AutoEncoder-nek nevezték el, amely alkalmazható generatív modellként \cite{oord2017neural}.
 Ha az autoencoder-t képek generálására kívánjuk felhasználni, úgy a helyreállított képeken egyfajta homályosságot figyelhetünk meg, amely a dekódolás során jelentkező információvesztésből adódik.
 
 A Generative Adverserial Network (GAN) \cite{goodfellow2014generative}, egy olyan generatív modell, amely nem a megszokott statisztikai alapokon optimalizál, mint például az Autoencoder vagy pixelRNN modellek, hanem játékelméleti megközelítést alkalmaz, így a modell tanítása is merőben másképp zajlik.
 A tanulás során két neurális hálózat versenyzik egymással: egy generátor, amelynek az a szerepe, hogy a tanítómintákhoz hasonló adatot generáljon a bemeneti zajból és egy diszkriminátor, amely egy bináris osztályozó, amely a generátor által generált adatot vizsgálja és eldönti, hogy az valódi vagy hamis.
-A tanítás során ezen két háló versenyzik egymással, együtt fejlődve. Az autoencoderhez képest a GAN-al generált képeken már nem figyelhető meg a homályosság, élesebb és fotórealisztikusabb képek generálása a fejlettebb GAN architektúrákkal megoldható.
+A tanítás során ezen két háló versenyzik egymással, együtt fejlődve. Az autoencoderhez képest a GAN-al generált képeken már nem figyelhető meg a homályosság, élesebb és fotórealisztikusabb képek generálására képes az eredmények alapján.
 
 A generátor bemenete egy zajvektor, amely általában Gauss- vagy egyenletes eloszlásból állítunk elő. A zajnak a terét az irodalom látens térnek is nevezi, hiszen a tanítás során a modell megtanulja, hogy ezen többdimenziós tér egyes pontjaira milyen kimenetet generáljon. Vagyis ezzel lényegében kitölti a rendelkezésre álló tér tartományait a megtanult jellegzetességekkel. A betanított generátorral, optimális esetben, ezen tér bármely pontját mintavételezve a tanítóhalmazhoz hasonló adatokat generálhatunk.
 
@@ -33,7 +33,7 @@ Ahol $\hat y$ a predikció, $y$ pedig a valós címke.
 cross_entropy = keras.losses.BinaryCrossentropy(from_logits=True)
 \end{python}
 
-A Kerasban található implementáció egy segédfüggvényt ad vissza, amelyet különféle paraméterekkel inicializálhatunk. A \texttt{from\_logits=True} paraméter esetén a keresztentrópia számolásnál nem szükséges a diszkriminátor modellnek tartalmaznia az utolsó sigmoid aktivációs függvényét, ami így egy úgynevezett \textit{Logits} kimenettel fog rendelkezni. A számolás során a kimeneti értékekre alkalmazódik ebben az esetben a sigmoid függvény egy fajtája. A gradiensek számolása így egyszerűbb lesz a modell számára a backpropagation során (Tényleg?)
+A Kerasban található implementáció egy segédfüggvényt ad vissza, amelyet különféle paraméterekkel inicializálhatunk. A \texttt{from\_logits=True} paraméter esetén a keresztentrópia számolásnál nem szükséges a diszkriminátor modellnek tartalmaznia az utolsó sigmoid aktivációs függvényét, ami így egy úgynevezett \textit{Logits} kimenettel fog rendelkezni. A számolás során a kimeneti értékekre alkalmazódik ebben az esetben a sigmoid függvény egy fajtája.
 
 \SubSection{Diszkriminátor hibafüggvénye}
 
@@ -81,15 +81,14 @@ Tehát a bináris keresztentrópia egy mintára:
 $$L(D(G(z)), 0) = \ln(1 - D(G(z))$$
 $D$ minimalizálni kívánja a $D(G(z))$-t, míg a $G$ maximalizálni szándékozik azt.
 
-A $G$ a tanítás során sosem fog valódi adatot látni, de a teljesség kedvéért a hibafüggvénye a következőképpen írható fel (Csak a második kifejezést minimalizálja valójában):
-$$\min V(G) = \mathbb{E}_{x \sim P(x)} \left[\ln D(x) \right] + \mathbb{E}_{z \sim P(z)} \left[\ln(1 - D(G(z))) \right]$$
+A $G$ a tanítás során sosem fog valódi adatot látni, csupán a diszkriminátor hibáiból fog tanulni.
 
 \begin{python}
 def generator_loss(fake_output):
     return cross_entropy(tf.ones_like(fake_output), fake_output)
 \end{python}
 
-Vagyis a GAN hálózat tanítása során $D$ és $G$ egy minimax játékot játszanak a $V(G, D)$ értékfüggvénnyel.
+A GAN hálózat tanítása során $D$ és $G$ egy minimax játékot játszanak a $V(G, D)$ értékfüggvénnyel.
 $$\min_{G}\max_{D}V(D, G) =  \mathbb{E}_{x \sim P(x)} \left[\ln D(x) \right] + \mathbb{E}_{z \sim P(z)} \left[\ln(1 - D(G(z))) \right]$$
 
 \SubSection{Optimalizáló módszer}
@@ -97,7 +96,11 @@ A GAN modell súlyait a sztochasztikus gradiens algoritmussal szokás frissíten
 
 A Generátort és a Diszkriminátort a hibafüggvények alapján kiszámolt gradiensek alapján külön-külön kell tanítani. Különféle szerzők különböző optimalizáló módszerek használatát javasolják, az Adam \cite{kingma2014adam} és az RMSProp a két legnépszerűbb módszer.
 
+A saját implementációimban az Adam optimalizáló módszert alkalmaztam. A módszer legfontosabb paramétere a \textit{learning-rate} vagyis a tanulási mérték. A 0.0001 learning-rate érték megfelelőnek tűnt a modelljeim tanítása során.
+
 %TODO: Optimalizáló módszerek bemutatása akár egy ábrával vagy valami, hogy ez az alfejezet valahogy pontosabb legyen!
+
+Az alábbi kódrészlet segítségével inicializálhatunk egy-egy példányt az Adam optimalizálóból a generátornak és a diszkriminátornak.
 
 \begin{python}
 generator_optimizer = keras.optimizers.Adam(1e-4)
@@ -117,9 +120,9 @@ Legyen $m$ a minibatch elemszáma $m \in \mathbb{N}$
 \begin{enumerate}
 \item Hozzunk létre $m$ darab zajmintát $(z_1, \ldots, z_m)$ gauss eloszlásból $P_g(z)$.
 \item A tanítóhalmazból emeljük ki a soron következő $m$ darab tanítómintát (képet), és ezt jelöljük $(x_1, \ldots, x_m)$-el $P_{\text{data}}(x)$
-\item Frissítsük a $D$ diszkriminátort a sztochasztikus gradiens emelkedésével (?? tükörfordítás)
+\item Frissítsük a $D$ diszkriminátort a sztochasztikus gradiens emelkedésével.
 $$ \nabla \theta_d \frac{1}{m} \sum_{i=1}^{m} \left[\log D(x_i) + \log(1 - D(G(z_i))) \right]$$
-\item  Frissítsük a $G$ generátort a sztochasztikus gradiens lejtésével (?? tükörfordítás)
+\item  Frissítsük a $G$ generátort a sztochasztikus gradiens süllyesztéssel.
 $$ \nabla \theta_d \frac{1}{m} \sum_{i=1}^{m} \log(1 - D(G(z_i)))$$
 \end{enumerate}
 
@@ -127,7 +130,10 @@ A GAN részeit tehát külön-külön tanítjuk, hiszen különböző neurális 
 Különböző tanítási stratégiákban ez is egy szabad paraméter lehet. Számomra megfelelő volt az 1:1-es tanítási lépés alkalmazása is. Viszont több cikkben is vizsgálják ezt, mint lehetséges beállítást.
 A tanítás hossza természetesen függ az adathalmaztól és annak méretétől, az alkalmazott mini-batch mérettől, a modellben található paraméterektől és az optimalizáló eljárástól.
 
-A TensorFlow-ban és Kerasban történő tanítási lépés megvalósítása a következő kódrészletben figyelhető meg. A \texttt{@tf.function} annotáció segítségével jelezhetjük a TensorFlow backendnek, hogy az annotációval ellátott függvényt fordítsa le (PONTOSÍTÁS). Az annotáció használata a kritikus, nagy erőforrás-igényű és ismétlődő számolásoknál a futásidőt csökkentheti. Az függvény első meghívásánál felállítja a függőségi vagy hívási gráfot is, ezzel is csökkentve a futásidőt. (PONTOSÍTÁS)
+A TensorFlow-ban és Kerasban történő tanítási lépés megvalósítása a következő kódrészletben figyelhető meg. A \texttt{@tf.function} annotáció segítségével jelezhetjük a TensorFlow backendnek, hogy az annotációval ellátott függvényt fordítsa le. Az annotáció használata a kritikus, nagy erőforrás-igényű és ismétlődő számolásoknál a futásidőt csökkentheti. Az függvény első meghívásánál felállítja a függőségi vagy hívási gráfot is, ezzel is csökkentve a futásidőt.
+
+%TODO: Utána nézni ennek az annotációnak, hogy valóban fordítás történik-e vagy csak a gráfot építi fel?
+
 \begin{python}
 @tf.function
 def train_step(images):
@@ -155,6 +161,9 @@ def train_step(images):
 \end{python}
 
 A tanítás ciklus függvénye az alábbi módon nézhet ki. Ehhez olyan dataset-re lesz szükségünk, amely mini-batch-okat tartalmaz. A későbbiekben láthatunk példát a dataset megfelelő összeállítására is.
+
+%TODO: Dataset összeállítása file-ból és tensorból!
+
 \begin{python}
 def train(dataset, epochs):
     for epoch in range(epochs):
@@ -176,7 +185,7 @@ Ezen architektúra természetesen a mai eredmények mellett egyszerűnek tűnhet
 \SubSection{Generátor}
 
 Az osztályozáshoz használt konvolúciós hálókkal ellentétben a Generátorban a kisebb felbontás felől haladunk a nagyobb felbontásig.
-A generátor modellem első implementációjában \textit{Dekonvolúciós} rétegeket alkalmaztam, amelyet \textit{Transzponált konvolúciós} rétegnek is nevezhetünk. A dekonvolúció a konvolúció ellentettje, vagyis a feladata, hogy egy alacsonyabb dimenziójú reprezentációt magasabb dimenzióba emeljen. Segítségével minden rejtett réteg kimenete egy nagyobb felbontású kép lesz. Tehát a hálónak jelen esetben meg kell tanulnia a rétegekben az optimális felbontás-növelést. Előre megadott paraméterek a filterek darabszáma, a kernel mérete, a strides(?) és a padding. Ha a padding-ot "same"-re és ha a strides paramétert $2 \times 2$-esnek választjuk, úgy a réteg kimenetén megjelenő kép felbontása kétszerese lesz a bemeneti oldalon megfigyelhető képnek. A rejtett rétegekben kezdetben ReLU aktivációs függvényt használtam, a neuronok kezdő értékeit a He inicializációs technikával \cite{he2015delving} állítottam be.
+A generátor modellem első implementációjában \textit{Dekonvolúciós} rétegeket alkalmaztam, amelyet \textit{Transzponált konvolúciós} rétegnek is nevezhetünk. A dekonvolúció a konvolúció ellentettje, vagyis a feladata, hogy egy alacsonyabb dimenziójú reprezentációt magasabb dimenzióba emeljen. Segítségével minden rejtett réteg kimenete egy nagyobb felbontású kép lesz. Tehát a hálónak jelen esetben meg kell tanulnia a rétegekben az optimális felbontás-növelést. Előre megadott paraméterek a filterek darabszáma, a kernel mérete, a strides(?) és a padding. Ha a padding-ot "same"-re és ha a strides paramétert $2 \times 2$-esnek választjuk, úgy a réteg kimenetén megjelenő kép felbontása kétszerese lesz a bemeneti oldalon megfigyelhető képnek. A rejtett rétegekben ReLU aktivációs függvényt használtam, a neuronok kezdő értékeit a He inicializációs technikával \cite{he2015delving} állítottam be.
 
 \begin{figure}[h]
 \centering
@@ -185,19 +194,19 @@ A generátor modellem első implementációjában \textit{Dekonvolúciós} réte
 \label{fig:relu}
 \end{figure}
 
-A tanításhoz célszerű a kép pixeleinek intenzitását normalizálni a $[-1, 1]$ intervallumra lebegőpontos értékekre. A Generátor is ebben az intervallumban fogja a képek pixeleit generálni a hiperbolikus tangens kimeneti aktivációs függvényéből adódóan. (tanh indoklás, sigmoid helyett..) A megjelenítéshez később természetesen denormalizálnunk kell a generált képek pixelértékeit a $[0, 255]$ tartományra.
+A tanításhoz célszerű a kép pixeleinek intenzitását normalizálni a $[-1, 1]$ intervallumra lebegőpontos értékekre. A Generátor is ebben az intervallumban fogja a képek pixeleit generálni a hiperbolikus tangens kimeneti aktivációs függvényéből adódóan. A megjelenítéshez később természetesen denormalizálnunk kell a generált képek pixelértékeit a $[0, 255]$ tartományra.
 
 A Generátor modell bemenetként az előre definiált látens tér dimenziójával megegyező dimenziójú zajt kap, vagyis annak a $z_n$ dimenziószámú térnek egy pontját. Majd ezen bemeneti zaj segítségével állítja össze a megfelelő kimeneti képet. A tanulás során tehát a látens tér tartományaihoz rendeli a tanult jellegzetességeket és a látens teret mintavételezve dekódolható a Generátor segítségével a ponthoz tartozó kép.
 
 A bemeneti zaj egy \textit{Reshape} rétegen megy keresztül, amelyben a látens tér dimenziószámát átformázza egy $1 \times 1 \times z_n$ dimenziójú mátrixszá. Ezen réteg kimenetével a későbbi dekonvolúciós rétegek már tudnak dolgozni.
 Ezután az első dekonvolúciós rétegen megy át a kapott mátrix, amely 512 darab filtert tartalmaz, $4 \times 4$-es kernelméretekkel dolgozik és 'valid' paddingot használ. Az aktivációs függvénye ReLU a már említett He inicializálással. Ezen lépés arra szolgál, hogy a látens térből előállítson egy $4 \times 4 \times 512$ alakú tensort, amely az első, legkisebb felbontású képünknek tekinthetjük ebben az esetben, ahol a színcsatornák száma 512 és a felbontása pedig $4 \times 4$.
 
-A Generátorban ezután $2 \times 2$-es stride értékeket használva same padding-gel a kívánt felbontásig dekonvolúciós rétegeken keresztül növekszik a felbontás. A kernelméretét a rétegekben egységesen $4 \times 4$-ra állítottam be. Az aktivációs függvény szintén ReLU. A rétegekben haladva a filterek darabszáma pedig feleződik. A filterek optimális számára csupán csak empirikus eredményeket találtam, így a paraméterek száma viszonylag alacsonyabban tartható és a tanítás ideje is lecsökken.
+A Generátorban ezután $2 \times 2$-es stride értékeket használva same padding-gel a kívánt felbontásig dekonvolúciós rétegeken keresztül növekszik a felbontás. A kernelméretét a rétegekben egységesen $4 \times 4$-ra állítottam be. Az aktivációs függvény szintén ReLU. A rétegekben haladva a filterek darabszáma pedig feleződik. A filterek optimális számára csupán csak empirikus eredményeket találtam, a felezéses eljárással a paraméterek száma viszonylag alacsonyabban tartható és a tanítás ideje is lecsökken.
 
 A kimeneti képnek olyan tulajdonságokkal kell rendelkeznie, mint a tanítómintában szeplő képeknek. Például ha a tanítóminta színes képekből áll, \textit{RGB} színkeveréssel, vagyis három színcsatornával, úgy a Generátor kimenetén is ilyen képekre van szükségünk. Mivel az említett dekonvolúciós rétegek több mint 3 színcsatornával dolgoztak, a megjeleníthetőség miatt szükséges tehát az utolsó dekonvolúciós rétegben a 3 darab filter, amely egyaránt transzponálja az előző réteg reprezentációit az egyel magasabb felbontás értékbe, és a csatornák számát pedig 3-ra állítja.
-Egyes GAN architektúrákban ez az utolsó réteg csupán a 3 színcsatornába vetítést végzi el konvolúciós réteggel és szokás \textit{to RGB} rétegnek is nevezni \cite{karras2017progressive, karras2019style, karnewar2020msg}. Viszont jelen esetben egyúttal a felbontást is növeli a példámban szereplő utolsó réteg, ha $1 \times 1$-es stride értékkel rendelkezne ez a dekonvolúciós réteg, akkor valójában úgy működne mint egy konvolúciós réteg és tényleg csak a csatornák számát változtatná meg. Viszont akkor szükség lenne még egy felbontásnövelő rétegre, amely tovább növelné a paraméterek számát.
+Egyes GAN architektúrákban ez az utolsó réteg csupán a 3 színcsatornába vetítést végzi el konvolúciós réteggel és szokás \textit{toRGB} rétegnek is nevezni \cite{karras2017progressive, karras2019style, karnewar2020msg}. Viszont jelen esetben egyúttal a felbontást is növeli a példámban szereplő utolsó réteg, ha $1 \times 1$-es stride értékkel rendelkezne ez a dekonvolúciós réteg, akkor valójában úgy működne mint egy konvolúciós réteg és tényleg csak a csatornák számát változtatná meg. Viszont akkor szükség lenne még egy felbontásnövelő rétegre, amely tovább növelné a paraméterek számát.
 
-Végül a hiperbolikus tangens aktivációs függvény hatására az eredményeket a $[-1, 1]$ intervallumba transzformálja.
+Végül a hiperbolikus tangens aktivációs függvény az eredményeket a $[-1, 1]$ intervallumba transzformálja.
 
 Az alábbi kódrészletben látható a felvázolt generátor architektúra megvalósítása a keras \textit{Sequential API}-ja segítségével.
 
@@ -251,7 +260,7 @@ discriminator = keras.Sequential([
 ])
 \end{python}
 
-Mint a kódrészletből is látható, az utolsó teljesen összekötött rétegnek nincsen aktivációs függvénye. A sigmoid függvényt a keresztentrópia számolásnál alkalmazzuk majd a dense réteg kimenetére, amely megkönnyíti a tanítást. (??)
+Mint a kódrészletből is látható, az utolsó teljesen összekötött rétegnek nincsen aktivációs függvénye, \textit{Logits} kiemnettel rendelkezik. A sigmoid függvényt a keresztentrópia számolásnál alkalmazzuk majd a dense réteg kimenetére.
 
 Az alábbi táblázatokban összefoglalom az architektúra felépítését:
 \begin{center}
@@ -302,7 +311,7 @@ Az alábbi táblázatokban összefoglalom az architektúra felépítését:
 
 \SubSection{Tanítás, mérések}
 
-A felvázolt architektúrát az Adam optimalizációs módszerrel, 0.0004 \textit{learning rate} hiperparaméter mellett tanítva a hibaértékek a következő ábrához hasonlóan alakulnak:
+A felvázolt architektúrát az AFHQ dataset-en, Adam optimalizációs módszerrel, 0.0004 \textit{learning rate} hiperparaméter mellett tanítva a hibaértékek a következő ábrához hasonlóan alakulnak:
 
 \begin{figure}[h]
 \centering
@@ -340,23 +349,69 @@ A felvázolt architektúra tanítása során különféle problémák jelentkezh
 
 
 \begin{itemize}
-	\item A modell ebben a formájában igen hajlamos az mode collapse-re, vagyis a tanulás során jelentkező összeomlásra. A jelenség és az elkerülésére irányuló néhány technika bemutatása a következő alfejezetekben kerül ismertetésre.
+	\item A modell ebben a formájában igen hajlamos az mode collapse-re, vagyis a tanulás során jelentkező összeomlásra. A jelenség és az elkerülésére irányuló néhány technika bemutatása a következőkben kerül ismertetésre.
 	\item A konvolúciós rétegek működéséből adódóan csupán lokális pixel-környezetekre képes összefüggő részeket generálni a modell.\\
 	Ez a működés alacsony felbontás mellett is anomáliákat idézhet elő, ilyen a képeken megfigyelhető ismétlődő, sakktáblamintás zaj. Az említett zajra láthatunk példát a \ref{fig:chessboard-patterns} ábrán. Megoldásként a Dekonvolúciós rétegek helyett a Konvolúciós és bilineáris interpolációval alkalmazott UpSampling rétegeket használata javasolt \cite{odena2016deconvolution}.\\
 	Ha a rejtett konvolúciós rétegek számával növelnénk a felbontást, akkor további nehézségbe is ütközünk: a modell nem lesz képes felismerni és megtanulni a tanítóminta képein megfigyelhető távoli, összefüggő tulajdonságokat. Így a generált képek részletezettsége alacsony lesz, gyakran \textit{blobokat} figyelhetünk meg csupán, különböző textúrákkal. \cite{salimans2016improved}
-
-	A tanítás stabilabbá tételére vonatkozó kutatások valójában a generált képek fotórealisztikusabbá tételével együtt fejlődtek. Például a \textit{Minibatch discrimination} \cite{salimans2016improved} technika alkalmazása, amely a Generált képek változatosságát kényszerítette ki a tanítás során vagy a \textit{Self-Attention} \cite{zhang2019self} rétegek alkalmazása a Generátorban és a Diszkriminátorban egyszerre növelték a képek minőségét és a stabilitást.
-	
-	A felbontás növelésére például a \textit{StackGAN} \cite{zhang2017stackgan} kétszintű GAN modellt használ: az első szinten alacsonyabb felbontáson kerül kigenerálásra egy kép a bemeneti zajvektorból, majd egy teljesen független GAN hálózat Generátor bemeneteként fog szolgálni az alsó szint generátorának a kimenete, mint zajvektor. Így a második szinten nagyobb felbontásban is ki tud generálódni a megfelelő kép. A \textit{ProGAN} \cite{karras2017progressive} architektúra úgy oldotta meg az felbontás növelést és a globális összefüggőség biztosítását, hogy a modellt alacsony felbontáson kezdték tanítani, majd ha betanult az adott felbontásra a modell, új rétegekkel bővítették ki, hogy a kimeneti felbontás kétszereződjön. Az alacsonyabb felbontáson betanult jellegzetességeket a további tanítási állomásokon kiegészítésekre kerültek a magasabb felbontásokon. A ProGAN ihlette a \textit{Multi-Scale Gradient GAN} \textit{karnewar2020msg} architektúrát is, amelynek szintén a felbontásnövelés és a képek részletességének növelése volt a célja. A ProGAN-al ellentétben az Multi-Scale Gradient GAN architektúráját a tanítás során nem szükséges módosítani, ugyanis a Generátor több kimenettel rendelkezik, amelyen ugyanazon generált kép különféle felbontásai találhatóak, míg a Diszkriminátor több bemeneten várja a képeket, különböző felbontások mellett. Az architektúra némileg hasonlít az \textit{U-net}-hez \cite{ronneberger2015u}. A technika nem csupán részletes képeket ígér, de mindemellett a tanítást is stabilabbá teszi.
 	
 	\item A modellnek nincsen információja a különféle osztályokról, csupán a képek rendezetlen halmazán tanul, így magától kell megtanulnia a különféle osztályok jellegzetességeit.
 	Az általánosítás szempontjából ez előnyös is lehet, viszont ha merőben különböző osztályokra szeretnénk betanítani a modellt, akkor az úgynevezett \textit{class conditoning} technika válhat a segítségünkre. A technikát a saját modellemre is kipróbáltam, a későbbiekben ismertetésre kerül.
 
 \end{itemize}
 
+\Section{GAN teljesítmény mérés}
+
+A gépi tanulásos modellek tanítási életciklusának utolsó lépése optimális esetben a tesztelés. Hagyományos esetben a dataset-et három részre osztjuk fel: Tanító-, teszt- és validáló halmazra. Hogy ezt milyen arányban tesszük meg, az függ a problémától is, de általánosan a teszt adathalmaz a dataset 20\%-a is lehet, a validáló halmaz még kisebb szelete a dataset-nek és a tanítóhalmazon történik a modell tanítása.
+A teszt halmazt csupán egyetlen egyszer láthatja hagyományos esetben a modell, a tanítás után.
+A teszthalmazzal szimuláljuk a modell valós adatokra történő alkalmazását, hiszen a modell számára ezen adatok teljesen ismeretlenek lesznek. A tesztadatok az eredeti dataset elemei, így rendelkezésünkre állnak az elvárt eredmények is, így a modell predikcióit össze tudjuk vetni az elvárt kimenettel, amelyből megbecsülhetjük a modell pontosságát különféle metrikák szerint.
+A GAN esetében osztályozási feladatot a diszkriminátor lát el, viszont a hamis adatok nem részei a datase-ünknek, azok a generátor által kreálódtak. A betanított modellnek csupán a generátora kerül felhasználásra, hiszen ezen komponens önmagában képes előállítani az új adatokat. A diszkriminátornak csupán a tanítás során van jelentősége és a validálásra önmagában nem alkalmas, hiszen ha a diszkriminátorunk rosszul tanult, úgy a generátorunk sem fog tudni a datasethez hasonló képeket generálni.
+A GAN esetében nem szokás a dataset-et feldarabolni tanító és teszt részre, hiszen nem tudjuk a generátorra alkalmazni a már ismert metrikákat.
+Ha képek generálása a feladat, úgy még nehezebb dolgunk van, hiszen a képeken hordozott információ igen összetett lehet.
+A generátor kimenetét kell valamilyen módon tesztelnünk, ami nem egy egyértelmű feladat.
+Egy emberi szemlélő természetesen meg tudná különböztetni a generált és a valós képeket. Lényegében a diszkriminátor feladatát látná el az emberi tesztelő, akinek hasonlóan mutathatnánk valódi és generált képeket, amelyekről el kell döntenie, hogy melyik a valódi és melyik a hamis. A fotórealisztikus képgenerálás igen nehéz feladat és ha egy kicsit is rosszul teljesít a modell, azt egy emberi szemlélő hamar észreveszi és a modell pontossága igen alacsony lesz az emberi megfigyelő ítéletei alapján. Ha visszajelzést is kap az ember a hibáiról, akkor Salimas et al. \cite{salimans2016improved} megfigyelték, hogy a továbbiakban sokkal pesszimistább ítéletet hoznak a tesztelők a képekre. Bináris, osztályozás helyett diszkrét vagy folytonos skálán is mérhetnénk a generált képeink jóságát. A pontos mérési eredmények érdekében több résztvevőt is be kéne vonnunk a tesztelésbe. Már belegondolva is igen lassú és költséges feladat lenne a modellünk tesztelése, így nem hagyatkozhatunk az emberi validálásra. Ez motiválta Salimas et al.-t is.
+
+Az alábbi két ajánlás két mérőszámot definiál, amelyek segítségével meghatározhatjuk a GAN modellünk teljesítményét. Ezen validálási technikák megjelenése óta az újonnan megjelent GAN architektúrák mindegyikét lemérték és a GAN-al foglalkozó cikkekben táblázatokban vetik össze a különféle modellek teljesítményét a sajátjukkal.
+A két mérőszámot együttesen szokták alkalmazni, hiszen egyik módszer sem tökéletes, viszont a kettőt együtt alkalmazva ad egy bizonyos képet a modellünk teljesítményéről.
+A két mérőszám közös jellemzője, hogy mindkettő az Inception modell által kinyert jellegvektorok alapján határozza meg a modell jóságát.
+
+Az alábbi kódrészlet az ImageNet adathalmazon betanított Inception modell használatát kívánja szemléltetni a Keras segítségével. A kódrészlet első futtatásakor a modell súlyai letöltésre kerülnek és a további betöltés esetén egyből rendelkezésre fog állni.
+
+\begin{python}
+inception_model = keras.applications.InceptionV3(weights='imagenet')
+predictions = inception_model.predict(images)
+\end{python}
+
+Az Inception modell bemenete alapértelmezett beállítások mellett egy $299 \times 299$ -es felbontású RGB színcsatornákkal rendelkező kép. A pixelértékeket normalizáltan várja a modell a $[-1, 1]$ tartományon. A modell inicializálásakor paraméterként megadhatjuk a bemenet méretét, viszont az nem lehet $75 \times 75$-nél kisebb. Ha az \texttt{include\_top} paramétert \texttt{True} értékkel állítjuk be, úgy a modell tartalmazni fogja az utolsó Dense rétegét is, amely az ImageNet súlyok alapján betanított modell esetében 1000 osztály detektálására lesz képes.
+
+Az említett, GAN teljesítménymérésére használatos módszerek az \textit{Inception Score} (IS) és \textit{Fréchet Inception Distance} (FID). Ezeket kívánom bemutatni az alábbi két alfejezetben.
+
+\SubSection{Inception Score}
+Az Inception Score \cite{salimans2016improved} technikát Salimans et al. az emberi tesztelés kiváltására vetette fel. A méréseik alapján a technika sok minta figyelembevételével igen jól közelíti az emberi tesztelők által mért eredményeket.
+Alapjául az Inception model szolgál, amelyet az ImageNet dataseten tanítottak be. Minden egyes generált képet beadnak inputként a betanított Inception modellnek, hogy megkapják a conditional label eloszlást $p(y|x)$. Az olyan képeken, amelyeken jelentőségteljes objektumok figyelhetők meg, alacsony entrópiájú $p(y|x)$-el kell rendelkeznie. Vagyis a generált képen minél kevesebb objektumot kell felismernie a modellnek.
+Továbbá az is lényeges szempont, hogy a generátor különféle képeket generálon, így a következőnek magas entrópiával kell rendelkeznie:
+$$ \int p(y|x = G(z))dz $$
+
+Az Inception Score tehát:
+
+$$ \exp(\mathbb{E}_x KL(p(y|x)||p(y))) $$
+
+Minél magasabb ez a szám, annál jobbnak tekinthető a GAN teljesítménye.
+
+Az Inception Score hivatalos implementációja \footnote{Az Inception Score hivatalos implementációja: \url{https://github.com/openai/improved-gan/tree/master/inception\_score}.} még a TensorFlow 1-es verziójában lett megírva, viszont a 2-es verzióval futtatva is működésre lehet bírni a megfelelő importok alkalmazása mellett. A méréshez a kigenerált képekre lesz szükségünk. A dolgozatom modelljeinek méréséhez a generált képek numpy tömbökben kerültek kimentésre. %TODO: Notebookok behivatkozása
+
+\SubSection{Fréchet Inception Distance}
+Az Incepton Score kiegészítésére megjelent egy másik, széles körben elfogadott teljesítménymerő technika, a Fréchet Inception Distance (FID) \cite{heusel2017gans}. Az IS nem vette figyelembe a tanítóminta statisztikáit, és ez egy igen nagy hátránya a technikának. Továbbá az IS feltételein is javítottak, hogy a mintákon megtalálható zajok is befolyásolják a végső eredményt. Az FID számolásnál az Inception modell utolsó rejtett rétegének kimenetét veszik figyelembe, amely 2048 elemű jellegvektort jelent. A mérés elvégzése előtt a GAN modell tanításához használt adathalmazon kell vizsgálatot végezni, majd a generált képek kerülnek vizsgálatra és az így kapott értékek alapján kapjuk meg a távolságot.
+
+Minél alacsonyabb az FID, annál jobb a modell teljesítménye az adott tanítómintán.
+
+$$ d^2((\boldsymbol{m}, \boldsymbol{C}), (\boldsymbol{m}_w, \boldsymbol{C}_w)) = \|\boldsymbol{m} - \boldsymbol{m}_w \|_2^2 + Tr(\boldsymbol{C} + \boldsymbol{C}_w - 2(\boldsymbol{C}\boldsymbol{C}_w)^{\frac{1}{2}}) $$
+
+Az FID hivatalos implementációja
+\footnote{A Fréchet Inception Distance hivatalos implementációja: \url{https://github.com/bioinf-jku/TTUR}.} szintén TensorFlow 1-ben került megvalósításra.
+
 \Section{Mode collapse jelenség}
 
-A Mode collapse jelenség alatt a tanulás során bekövetkező azon anomáliát értjük, amely során a Generátor a látens tér bármely pontjára ugyanolyan kimeneti képet generál. A képek között minimális változatosság ugyan megfigyelhető, viszont a kigenerált minősége erősen romlik ilyen esetben. Előfordulhatnak olyan esetek is, amikor egy-egy megtanult képi jellegzetesség jelennek meg a kigenerált képeken teljesen indokolatlanul és ezen jellegek helyére kerülnek újak a további tanítási lépések alatt. A tanítás közben felléphetnek lokális mode-collapse-ok is, amelyek a látens-tér egyes tartományaiban alakulhatnak ki \cite{zhang2018stackgan++}.
+A Mode collapse jelenség alatt a tanulás során bekövetkező azon anomáliát értjük, amely során a Generátor a látens tér bármely pontjára ugyanolyan kimeneti képet generál. A képek között minimális változatosság ugyan megfigyelhető, viszont a minőségük erősen romlik ilyen esetben. Előfordulhatnak olyan esetek is, amikor egy-egy megtanult képi jellegzetesség jelennek meg a kigenerált képeken teljesen indokolatlanul és ezen jellegek helyére kerülnek újak a további tanítási lépések alatt. A tanítás közben felléphetnek lokális mode-collapse-ok is, amelyek a látens-tér egyes tartományaiban alakulhatnak ki \cite{zhang2018stackgan++}.
 
 \begin{figure}[h]
 	\centering
@@ -365,7 +420,7 @@ A Mode collapse jelenség alatt a tanulás során bekövetkező azon anomáliát
 	\label{fig:mode-collapse}
 \end{figure}
 
-Ez a jelenség valójában tekinthető egyfajta \textit{overfitting}-nek is, vagyis túltanulásnak, hiszen a Generátor úgy tudja átverni a Diszkriminátort, hogy közben a modell használhatalan lesz. Viszont a mode-collapse elnevezés találóbb, hiszen amikor ez bekövetkezik, akkor a további tanítási lépések során úgy tűnhet, hogy stablian tűnő modell hirtelen összeomlott volna.
+Ez a jelenség valójában tekinthető egyfajta \textit{overfitting}-nek is, vagyis túltanulásnak, hiszen a Generátor úgy tudja átverni a Diszkriminátort, hogy közben a modell használhatalan lesz. Viszont a mode-collapse elnevezés találóbb, hiszen amikor ez bekövetkezik, akkor a további tanítási lépések során úgy tűnhet, hogy stablinak tűnő modell hirtelen összeomlott volna.
 A mode-collapse fellépése esetén a model további tanítása során minden egyes epoch-al változik a mode, vagyis az előzőtől eltérő kép jelenik meg a kimeneten (szintén minden egyes mintavételezett pontra hasonló). Mivel a diszkriminátor a mini-batch minden egyes bemenetét egymástól függetlenül dolgozza fel, így a gradienseiben sem jelenik meg olyan információ, amely a generátort változatosabb képek generálására bíztatná. A mode collapse esetén a diszkriminátor egyetlen pontot képes csak valódi adatnak tekinteni, majd minden egyes frissítéssel a pont elmozdul, ezzel magyarázható, hogy az összeomlás után tanítva minden egyes iterációval változik ezen pont, amire \textit{mode}-ként szokás hivatkozni \cite{salimans2016improved} Vagyis a GAN modellünk használhatatlanná válik.
 
 Egyes szerzők munkájában kiemelik, hogy az összeomlásig tanítják a felvázolt modelleket és az összeomlás előtti állapotokra állítják vissza a hálózat súlyait a használathoz, mint például a BIG-GAN architektúra esetében is \cite{brock2018large}.
@@ -379,6 +434,8 @@ Egyes szerzők munkájában kiemelik, hogy az összeomlásig tanítják a felvá
 
 A \ref{fig:mode_collapse_loss} ábrán megfigyelhető a generátor és a diszkriminátor hibáinak alakulása a tanulás alatt. A kiugró hibaérték mindkét háló esetében ugyanazon epoch alatt jelentkeztek és a kimeneti képeket megvizsgálva megfigyelhetjük, hogy a modell valóban mode collapse áldozatává vált. Az ábrán azt is megfigyelhetjük, hogy a tanítás egészen korai szakaszában jelentkezett ezen anomália. Ennek oka az, hogy egy olyan adathalmazon tanítottam a modellt, amelyen semmiféle tisztítást nem alkalmaztak. Az adathalmaz a \textit{Flickr30k} \cite{young2014image}, amely egy ingyenes internetes képmegosztó weboldalról összegyűjtött képekből áll és 30 ezer képet tartalmaz. A képekhez leíró mondatok is tartoznak, amelyeket a tanítás során nem vettem figyelembe. Ilyen véletlenszerű és változatos képekre a modell jelenlegi formájában nem képes általánosítást találni, így a megfelelően előkészített adathalmaz továbbra is igen fontos része a GAN megfelelő tanításához.
 
+A mode-collapse detektálása abban az esetben történhet a hibafüggvények vizsgálatával, ha a modellben teljes összeomlás figyelhető meg. A kisebb, lokális mode-collapse-ek esetében nem kapunk ilyen visszajelzést a hibafüggvényektől. A detektálásra alkalmasak lehetnek a validálási/teljesítménymérő módszerek is, vagyis az előbbiekben ismertetett IS és FID módszerek, amelyek a kigenerált képek változatosságát is figyelembe veszik az értékelés során.
+
 \Section{Regularizációs módszerek}
 A GAN tanítása során nehézségekbe ütközhetünk. Legrosszabb esetben nem is kezd el konvergálni a generátor kimenete a tanítóminta képeihez, viszont abban az esetben gyanakodhatunk, hogy a modellünk nem lett helyesen felépítve. Amennyiben mégis elkezd fejlődni a modell és nem csak zaj jelenik meg a kimeneten az egyes tanítólépések után, de bizonyos számú epoch után mode collapse lép fel, úgy fontolóra vehetjük a következő regularizációs technikákat.
 
@@ -390,7 +447,7 @@ A regularizációs technikákban megfigyelhető néhány esetben egy kicsi ellen
 \begin{python}
 def discriminator_loss(real_output, fake_output):
     real_loss = cross_entropy(
-	    tf.constant(np.full(fake_output.shape, 0.9)),
+	    tf.constant(np.full(real_output.shape, 0.9)),
 	    real_output)
     fake_loss = cross_entropy(
 	    tf.constant(np.full(fake_output.shape, 0)),
@@ -401,7 +458,7 @@ def discriminator_loss(real_output, fake_output):
 
 \SubSection{Megfelelő inicializációs stratégia}
 
-A mély neurális hálózatoknál igen gyakran előforduló probléma az úgynevezett exploding vagy éppen a vanishing gradiensek jelensége, amelyet gyakran csupán instabil gradienseknek is szokás nevezni.
+A mély neurális hálózatoknál igen gyakran előforduló probléma az úgynevezett exploding vagy éppen a vanishing gradiensek jelensége, amelyet gyakran csupán instabil gradienseknek is szokás nevezni. \cite{geron2019hands}
 A tanítás forward-propagation stádiumában a hálózat kimenetén megfigyelhető túl magas vagy éppen túl alacsony értékek a hibafüggvény meghatározásánál is szélsőséges értékeket okozhatnak.
 A backpropagation stádiumában az output rétegtől haladunk az input felé, amely során kiszámolásra kerülnek a gradiensek a hálózat minden egyes paraméterének függvényében. Majd Gradient Descent vagy ahhoz hasonló algoritmus segítségével frissülnek a hálózat paraméterei. Mindkét irányban fontos lenne elkerülni az esetleges kilengéseket, hogy a tanítás stabilitását elősegítsük.
 Az olyan hálózatoknál, amelyekben több rejtett réteg is található, az instabil gradiensek jelensége még inkább érvényesül. A backpropagation során az input réteg felé haladva a gradiensek hajlamosak lehetnek igen kis értékekre zsugorodni. Ilyen esetben az alacsonyabb rétegek rendszerint lassabban fognak tanulni, amely szintén komoly problémát jelent.
@@ -445,7 +502,7 @@ A Keras a Glorot inicializálást használja alapértelmezetten.
 
 \SubSection{Batch Normalization}
 Az instabil gradiensek problémája a tanítás során is jelentkezhet, a megfelelő inicializációs stratégia nem garantálja a teljes stabilitást, csupán egy kezdeti optimális állapotot biztosít a modellnek.
-Az input adatok standardizálása áll a Batch Normalization technika mögött, amelyet a rétegek között vagy a rétegek aktivációs függvénye előtt ajánlott megtenni. A Batch Normalization technika alkalmazásához tehát minimálisan módosítanunk kell a meglévő modelljeink architektúráját. Viszont úgy figyeltem meg, hogy ezen technika alkalmazása teljesen empirikus módon történik és nincsen egy általánosan elfogadott módszer arra sem, hogy pontosan hol kell elhelyezni a réteget (az aktivációs függvények előtt vagy után vagy mindkét helyen bigGAN esetében mindenhova rakták, a többit meg kell néznem). A GAN esetében a kezdeti próbálkozásban csupán a diszkriminátorban (tényleg így van?) helyezték el a rétegeket (melyik cikkekben láttam ezt?), majd a generátorban is alkalmazásra került. Kétségtelen, hogy a technika alkalmazásával stabilabb tanítást eredményez és széleskörűen alkalmazható a mély neurális hálózatokban.
+Az input adatok standardizálása áll a Batch Normalization technika mögött, amelyet a rétegek között vagy a rétegek aktivációs függvénye előtt ajánlott megtenni. A Batch Normalization technika alkalmazásához tehát minimálisan módosítanunk kell a meglévő modelljeink architektúráját. Viszont úgy figyeltem meg, hogy ezen technika alkalmazása teljesen empirikus módon történik és nincsen egy általánosan elfogadott módszer arra sem, hogy pontosan hol kell elhelyezni a réteget: az aktivációs függvények előtt vagy után. Kétségtelen, hogy a technika alkalmazásával stabilabb tanítást eredményez és széleskörűen alkalmazható a mély neurális hálózatokban.
 
 A Batch Normalization technika zero-centerezi és normalizálja az inputokat, majd skálázza és shifteli az eredményeket. Vagyis két tanulható paramétervektor jelenik meg rétegenként a modellünkben, a skálázásra és shiftelés műveletre. A technika neve a mini-batch tanítási stratégiából adódik, vagyis amikor egy tanítási lépést nem a teljes dataset-re hajtunk végre, csupán egy annak kisebb szeletére. A Batch Normalization zero-centerező és normalizáló lépéséhez az algoritmusnak meg kell becsülnie az aktuális bemeneti mini-batch várható értékét és szórását. Ezt a becslést csupán tanítási időben tudja megtenni az algoritmus, hiszen olyankor rendelkezésére áll a teljes mini-batch. Viszont tesztelésnél, amikor csupán egy-egy tesztadatot lát a modell, úgy nem hagyatkozhatunk a becsült várhatóértékre és szórásra. A Keras-ban található implementáció a tanulás során mozgóátlaggal vezeti a várhatóértékeket és a szórásokat. Ez további két paramétert jelent, amelyeket a modell a tanulási folyamat során fog meghatározni a már említett módon, viszont a backpropagation során nem kerülnek finomhangolásra, csupán tesztidőben kerülnek felhasználásra ezek az értékek.
 
@@ -473,71 +530,9 @@ Az algoritmus kimenete a $z_i$.
 \SubSection{Two Time-Scale Update Rule (TTUR)}
 Ezen technikát szintén meg lehet valósítani architektúrális változtatás nélkül, csupán az Adam optimalizáló eljárás egyik paraméterét kell megfelelően beállítani az implementációjához.
 Heusel et al. \cite{heusel2017gans} cikkjében mérésekkel alátámasztották, hogy ha az Adam optimalizáló módszert választjuk a GAN tanításához és a learning rate paramétert a generátorban és a diszkriminátorban különbözőre állítjuk, úgy a modell gyorsabban és stabilabban fog konvergálni a lokális optimumokhoz.
+Például a Generátor optimalizálójában a 0.0001-es tanulási mérték és a Diszkriminátor optimalizálójában meállított 0.0004 érték ezt a technikát valósítja meg.
 
-0.0001
-
-0.0004
-
-(különböző learning rate a generátorban és a diszkriminátorban)
-
-
-\Section{GAN teljesítmény mérés}
-
-A gépi tanulásos modellek tanítási életciklusának utolsó lépése optimális esetben a tesztelés. Hagyományos esetben a dataset-et három részre osztjuk fel: Tanító-, teszt- és validáló halmazra. Hogy ezt milyen arányban tesszük meg, az függ a problémától is, de általánosan a teszt adathalmaz a dataset 20\%-a is lehet, a validáló halmaz még kisebb szelete a dataset-nek és a tanítóhalmazon történik a modell tanítása.
-A teszt halmazt csupán egyetlen egyszer láthatja hagyományos esetben a modell, a tanítás után.
-A teszthalmazzal szimuláljuk a modell valós adatokra történő alkalmazását, hiszen a modell számára ezen adatok teljesen ismeretlenek lesznek. A tesztadatok az eredeti dataset elemei, így rendelkezésünkre állnak az elvárt eredmények is, így a modell predikcióit össze tudjuk vetni az elvárt kimenettel, amelyből megbecsülhetjük a modell pontosságát különféle metrikák szerint.
-A GAN esetében osztályozási feladatot a diszkriminátor lát el, viszont a hamis adatok nem részei a datase-ünknek, azok a generátor által kreálódtak. A betanított modellnek csupán a generátora kerül felhasználásra, hiszen ezen komponens önmagában képes előállítani az új adatokat. A diszkriminátornak csupán a tanítás során van jelentősége és a validálásra önmagában nem alkalmas, hiszen ha a diszkriminátorunk rosszul tanult, úgy a generátorunk sem fog tudni a datasethez hasonló képeket generálni.
-A GAN esetében nem szokás a dataset-et feldarabolni tanító és teszt részre, hiszen nem tudjuk a generátorra alkalmazni a már ismert metrikákat.
-Ha képek generálása a feladat, úgy még nehezebb dolgunk van, hiszen a képeken hordozott információ igen összetett lehet.
-A generátor kimenetét kell valamilyen módon tesztelnünk, ami nem egy egyértelmű feladat.
-Egy emberi szemlélő természetesen meg tudná különböztetni a generált és a valós képeket. Lényegében a diszkriminátor feladatát látná el az emberi tesztelő, akinek hasonlóan mutathatnánk valódi és generált képeket, amelyekről el kell döntenie, hogy melyik a valódi és melyik a hamis. A fotórealisztikus képgenerálás igen nehéz feladat és ha egy kicsit is rosszul teljesít a modell, azt egy emberi szemlélő hamar észreveszi és a modell pontossága igen alacsony lesz az emberi megfigyelő ítéletei alapján. Ha visszajelzést is kap az ember a hibáiról, akkor Salimas et al. megfigyelték, hogy a továbbiakban sokkal pesszimistább ítéletet hoznak a tesztelők a képekre. Bináris, osztályozás helyett diszkrét vagy folytonos skálán is mérhetnénk a generált képeink jóságát. A pontos mérési eredmények érdekében több résztvevőt is be kéne vonnunk a tesztelésbe. Már belegondolva is igen lassú és költséges feladat lenne a modellünk tesztelése, így nem hagyatkozhatunk az emberi validálásra. Ez motiválta Salimas et al.-t is.
-
-Az alábbi két ajánlás két mérőszámot definiál, amelyek segítségével meghatározhatjuk a GAN modellünk teljesítményét. Ezen validálási technikák megjelenése óta az újonnan megjelent GAN architektúrák mindegyikét lemérték és a GAN-al foglalkozó cikkekben táblázatokban vetik össze a különféle modellek teljesítményét a sajátjukkal.
-A két mérőszámot együttesen szokták alkalmazni, hiszen egyik módszer sem tökéletes, viszont a kettőt együtt alkalmazva ad egy bizonyos képet a modellünk teljesítményéről.
-A két mérőszám közös jellemzője, hogy mindkettő az Inception modell által kinyert jellegvektorok alapján határozza meg a modell jóságát.
-
-Az alábbi kódrészlet az ImageNet adathalmazon betanított Inception modell használatát kívánja szemléltetni a Keras segítségével. A kódrészlet első futtatásakor a modell súlyai letöltésre kerülnek és a további betöltés esetén egyből rendelkezésre fog állni.
-
-\begin{python}
-inception_model = keras.applications.InceptionV3(weights='imagenet')
-predictions = inception_model.predict(images)
-\end{python}
-
-Az Inception modell bemenete alapértelmezett beállítások mellett egy 299x299 -es felbontású rbg színcsatornákkal rendelkező kép. A pixelértékeket normalizáltan várja a modell a $[-1, 1]$ tartományon. A modell inicializálásakor paraméterként megadhatjuk a bemenet méretét, viszont az nem lehet 75x75-nél kisebb. Ha az \texttt{include\_top} paramétert \texttt{True} értékkel állítjuk be, úgy a modell tartalmazni fogja az utolsó Dense rétegét is, amely az ImageNet súlyok alapján betanított modell esetében 1000 osztály detektálására lesz képes.
-
-Az említett, GAN teljesítménymérésére használatos módszerek az \textit{Inception Score} (IS) és \textit{Fréchet Inception Distance} (FID). Ezeket kívánom bemutatni az alábbi két alfejezetben.
-
-\SubSection{Inception Score}
-Az Inception Score \cite{salimans2016improved} technikát Salimans et al. az emberi tesztelés automatizálására vetette fel. A méréseik alapján a technika sok minta figyelembevételével igen jól közelíti az emberi tesztelők által mért eredményeket.
-Alapjául az Inception model szolgál, amelyet az ImageNet dataseten tanítottak be. Minden egyes generált képet beadnak inputként a betanított Inception modellnek, hogy megkapják a conditional label eloszlást $p(y|x)$. Az olyan képeken, amelyeken jelentőségteljes objektumok figyelhetők meg, alacsony entrópiájú $p(y|x)$-el kell rendelkeznie. Vagyis a generált képen minél kevesebb objektumot kell felismernie a modellnek.
-Továbbá az is lényeges szempont, hogy a generátor különféle képeket generálon, így a következőnek magas entrópiával kell rendelkeznie:
-$$ \int p(y|x = G(z))dz $$
-
-Az Inception Score tehát:
-
-$$ \exp(\mathbb{E}_x KL(p(y|x)||p(y))) $$
-
-Minél magasabb ez a szám, annál jobb a GAN teljesítménye. Természetesen az IS is kijátszható és hamis eredményeket is adhat. (Note on IS-ben van róla szó)
-
-%TODO: IS - írni még erről gondolatokat, pontosítani
-
-\footnote{Az Inception Score hivatalos implementációja: \url{https://github.com/openai/improved-gan/tree/master/inception\_score}.}
-
-
-\SubSection{Fréchet Inception Distance}
-Az Incepton Score kiegészítésére megjelent egy másik, széles körben elfogadott teljesítménymerő technika, a Fréchet Inception Distance (FID) \cite{heusel2017gans}. Az IS nem vette figyelembe a tanítóminta statisztikáit, és ez egy igen nagy hátránya a technikának. Továbbá az IS feltételein is javítottak, hogy a mintákon megtalálható zajok is befolyásolják a végső eredményt.
-
-%TODO: FID - Pontosítás!!! Az eredeti implementációk TF1-ben vannak, miért nem a 2-ben???
-
-Minél alacsonyabb az FID, annál jobb a modell teljesítménye az adott tanítómintán.
-
-$$ d^2((\boldsymbol{m}, \boldsymbol{C}), (\boldsymbol{m}_w, \boldsymbol{C}_w)) = \|\boldsymbol{m} - \boldsymbol{m}_w \|_2^2 + Tr(\boldsymbol{C} + \boldsymbol{C}_w - 2(\boldsymbol{C}\boldsymbol{C}_w)^{\frac{1}{2}}) $$
-
-
-\footnote{A Fréchet Inception Distance hivatalos implementációja: \url{https://github.com/bioinf-jku/TTUR}.}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+A bemutatott regularizációs technikák csupán a legismertebbek, az egyéb módszereket nem sikerült megfelelően alkalmaznom, így nem kerülnek említésre.
 
 \Section{A képgeneráló modell kibővítési lehetőségei}
 
@@ -612,7 +607,7 @@ A saját implementációmban a \textit{toRGB} konvolúciós réteg a következő
 
 A 4 darab \textit{toRGB} réteg további 46092 darab hiper-paramétert jelent, amelyek a tanítás során kerülnek finomhangolásra. Az eredeti modell milliós hiper-paraméter nagysága mellett nem tűnik olyan nagy kiegészítésnek. Viszont ezen rétegeknek is meg kell tanulnia a belső reprezentációk megfelelő leképzését a három színcsatornára.
 
-A \ref{fig:msgGenerator} ábrán egy olyan generátor figyelhető meg, amely 4 kimenettel rendelkezik és rendre: $4 \times 4$, $8 \times 8$, $16 \times 16$ és $32 \times 32$ felbontású képeket generál egyszerre. A kép nagysága miatt csupán $32 \times 32$  maximális felbontás került ábrázolásra.
+A \ref{fig:msgGenerator} ábrán egy olyan generátor figyelhető meg, amely 4 kimenettel rendelkezik és rendre: $4 \times 4$, $8 \times 8$, $16 \times 16$ és $32 \times 32$ felbontású képeket generál egyszerre. A kép nagysága miatt csupán $32 \times 32$ maximális felbontásig felépített modell került ábrázolásra.
 
 \begin{figure}[h]
 	\centering
@@ -645,7 +640,7 @@ Az egyértelműség érdekében a \textit{fromRGB} rétegek paraméterei a köve
 	\label{fig:msgDiscriminator}
 \end{figure}
 
-A diszkriminátor is megőrizte az eredeti felépítését, viszont a \textit{fromRGB} rétegek igen sok további hiper-paramétert adnak hozzá a modellhez. Itt már milliós nagyságrendű új paraméter kerül a modellbe és ezen kiegészítés hatására az eredetileg 3,5 millió paraméterrel rendelkező modell máris 7,1 millió paraméterrel rendelkezik. Így nem érvényesül a korábban felállított tükörkép-szerkezet, vagyis amikor a diszkriminátor a generátor fordítottja. A \textit{fromRGB} rétegek filtereinek számának hatására nő meg a paraméterek száma ilyen nagy mértékben. A módszert bemutató cikkben többféle módon is vizsgálták a bemenet összefűzés előtti feldolgozását. A nyers bemeneti képeken nem alkalmaztak végül transzformációt és a cikkben felvázolt architektúrához az nyújtotta a legjobb megoldást. A saját implementációmat is ilyen módon készítettem el. Viszont azt figyeltem meg, hogy csupán a nyers képek hozzáfűzése mellett a modell először a legnagyobb felbontású képeket tanulja meg megfelelően kigenerálni és a tanítás során igen lassan kerülnek a súlyok olyan állapotban, hogy az alsóbb rétegek is megfelelően megtanulják a kimenet elkészítését.
+A diszkriminátor is megőrizte az eredeti felépítését, viszont a \textit{fromRGB} rétegek igen sok további hiper-paramétert adnak hozzá a modellhez. Itt már milliós nagyságrendű új paraméter kerül a modellbe és ezen kiegészítés hatására az eredetileg 3,5 millió paraméterrel rendelkező modell máris 7,1 millió paraméterrel rendelkezik. Így nem érvényesül a korábban felállított tükörkép-szerkezet, vagyis amikor a diszkriminátor a generátor fordítottja. A \textit{fromRGB} rétegek filtereinek számának hatására nő meg a paraméterek száma ilyen nagy mértékben. A módszert bemutató cikkben többféle módon is vizsgálták a bemenet összefűzés előtti feldolgozását. A nyers bemeneti képeken nem alkalmaztak végül transzformációt és a cikkben felvázolt architektúrához az nyújtotta a legjobb megoldást. A saját implementációmat is ilyen módon készítettem el kezdetben. Viszont azt figyeltem meg, hogy csupán a nyers képek hozzáfűzése mellett a modell először a legnagyobb felbontású képeket tanulja meg megfelelően kigenerálni és a tanítás során igen lassan kerülnek a súlyok olyan állapotban, hogy az alsóbb rétegek is megfelelően megtanulják a kimenet elkészítését. A legkisebb felbontású kimeneten látszólag nem is tanult a modell, csupán random zaj jelent meg. Az architektúrámra alkalmazva a \textit{fromRGB} rétegeket megoldotta a legalsó rétegek tanulási problémáját.
 
 \begin{figure}[h]
 	\centering
@@ -674,7 +669,7 @@ A \ref{fig:msg_output} ábrán a generátor kimeneteit figyelhetjük meg $4 \tim
 	\label{fig:msg_output}
 \end{figure}
 
-Az eredeti és ezen új modell teljesítményének méréséhez az Inception Score és a Fréchet Inception Distance metrikákat alkalmaztam. A méréshez a Cifar10 és az AFHQ adathalmaz elemein tanult mély konvolúciós(DC-GAN) és Multi Scale Gradient (MSG-GAN) generátorait használtam fel. A méréshez egységesen 10000 mintát generáltam mind a négy modellhez a tanításhoz is használt normális eloszlásból kapott látens vektorokkal. A mérés eredménye az alábbi táblázatban figyelhető meg. Az IS esetében a magasabb érték jelent jobb eredményt, az FID-nál pedig az alacsonyabb eredmény jelent jobb teljesítményt. A mérés alapján az alkalmazott kiegészítés a modell javára vált.
+Az eredeti és ezen új modell teljesítményének méréséhez az Inception Score és a Fréchet Inception Distance metrikákat alkalmaztam. A méréshez a Cifar10 és az AFHQ adathalmaz elemein tanult mély konvolúciós(DC-GAN) és Multi Scale Gradient (MSG-GAN) generátorait használtam fel. A méréshez egységesen 10000 mintát generáltam mind a négy modellhez a tanításhoz is használt normális eloszlásból kapott látens vektorokkal. A mérés eredménye az alábbi táblázatban figyelhető meg. Az IS esetében a magasabb érték jelent jobb eredményt, az FID-nál pedig az alacsonyabb eredmény jelent jobb teljesítményt. A mérés alapján az alkalmazott kiegészítés a modell javára vált, viszont nagymértékű javulás nem tapasztalható. (Az FID még nincs mérve!)
 
 %TODO FID mérés!
 \begin{center}
