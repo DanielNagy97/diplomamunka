@@ -189,8 +189,12 @@ Mivel a GAN tanítása után a Diszkriminátort elhagyjuk és további szerepe n
 
 A bemeneti vektorok visszakeresése pedig a már ismertetett gradiens süllyesztés módszerrel valósul meg, viszont a hibafüggvény számolása a Kategórikus Kereszt-entrópia által kerül meghatározásra, hasonlóan, mint az osztályozó tanításánál. Az algoritmus bemenete tehát a kezdeti zajvektor, a keresendő címke és a gradiens módszer paraméterei (a lépésköz, a momentum és az iterációszám).
 A bemeneti címkét \textit{One-Hot} enkódolással kell megadni a keresztentrópia számoláshoz, ugyanis az új osztályozó modell kimenete az adott osztályok valószínűségi értékei lesznek. A gradiens kereséssel pedig a keresztentrópia értéket kívánjuk csökkenteni. Tehát ha egy adott osztályra kívánunk egy olyan vektort kapni, amelyből a megfelelő osztályba tartozó képet ki tudja generálni a generátor, akkor ebben az esetben az osztályhoz tartozó valószínűségi érték 1 lesz, a többi osztályé pedig 0.
+
 Amennyiben kevert osztályra kívánunk képet generálni, úgy olyan keresendő one-hot enkódolást kell megadnunk, amelyben a kívánt osztályok megfelelő súlyokkal rendelkeznek. Mivel a GAN tere folytonosan van kitöltve, így feltehető, hogy létezik olyan pont a térben, amely egyszerre több osztály jellegzetességeit is magában hordozza. A \ref{fig:interpolation} ábrán is megfigyelhető, hogy az interpoláció mintavételezett pontjaiban a két végpont között milyen folytonos az átmenet és a köztes állapotokban mindkét pont tulajdonságai megjelennek.
 
+Az eljárás optimális paraméterei ebben az esetben is több tényezőtől függnek. Az osztályozó modell teljesítménye, az osztályok száma is igen nagy befolyásoló tényező lehet a megfelelő lépésköz és momentum kiválasztására.  Megfigyeléseim szerint a megfelelő eredmények elérése érdekében a lépésközt a pixelszintű kereséstől is alacsonyabbra érdemes választani, például $l=0.005$ lépésközzel és $0.09$-es momentum értékkel az AFHQ adathalmazon tanult modellekkel értékelhető találatokat kaphatunk. A túl magas lépésköz hatására a keresés során a látens tér olyan területeire is tévedhet az algoritmus, amelyre a generátor szaturált képeket tud előállítani csupán.
+
+A \ref{fig:collapsed_mode} ábrán is szemléltetett, a generátorban kialakuló összeomlott-mode-ok a keresési folyamat során is bosszúságot okozhatnak. Amint belépünk egy ilyen területre a keresés során, az algoritmus nem képes kilépni, hiszen az osztályozó egyszerre látja mindegyik osztály jellegzetességeit a vizsgált képen.
 %TODO: A keresés optimális paramétereire becslés, vagy hogy hogyan lehet kipróbálgatni, ajánlások a paraméterekre...
 
 %TODO: Input jelzése valahogy az ábrákon.
@@ -208,3 +212,5 @@ Amennyiben kevert osztályra kívánunk képet generálni, úgy olyan keresendő
 	\caption{Kép generálása osztály szerint (Hajó címkével)}
 	\label{fig:searching_ship}
 \end{figure}
+
+

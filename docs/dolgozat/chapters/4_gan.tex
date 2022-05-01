@@ -377,8 +377,7 @@ Egyes szerzők munkájában kiemelik, hogy az összeomlásig tanítják a felvá
 	\label{fig:mode_collapse_loss}
 \end{figure}
 
-%TODO IS és FID detektálási módszer megemlítése, a görbékről egy kis magyarázattal szolgálni
-
+A \ref{fig:mode_collapse_loss} ábrán megfigyelhető a generátor és a diszkriminátor hibáinak alakulása a tanulás alatt. A kiugró hibaérték mindkét háló esetében ugyanazon epoch alatt jelentkeztek és a kimeneti képeket megvizsgálva megfigyelhetjük, hogy a modell valóban mode collapse áldozatává vált. Az ábrán azt is megfigyelhetjük, hogy a tanítás egészen korai szakaszában jelentkezett ezen anomália. Ennek oka az, hogy egy olyan adathalmazon tanítottam a modellt, amelyen semmiféle tisztítást nem alkalmaztak. Az adathalmaz a \textit{Flickr30k} \cite{young2014image}, amely egy ingyenes internetes képmegosztó weboldalról összegyűjtött képekből áll és 30 ezer képet tartalmaz. A képekhez leíró mondatok is tartoznak, amelyeket a tanítás során nem vettem figyelembe. Ilyen véletlenszerű és változatos képekre a modell jelenlegi formájában nem képes általánosítást találni, így a megfelelően előkészített adathalmaz továbbra is igen fontos része a GAN megfelelő tanításához.
 
 \Section{Regularizációs módszerek}
 A GAN tanítása során nehézségekbe ütközhetünk. Legrosszabb esetben nem is kezd el konvergálni a generátor kimenete a tanítóminta képeihez, viszont abban az esetben gyanakodhatunk, hogy a modellünk nem lett helyesen felépítve. Amennyiben mégis elkezd fejlődni a modell és nem csak zaj jelenik meg a kimeneten az egyes tanítólépések után, de bizonyos számú epoch után mode collapse lép fel, úgy fontolóra vehetjük a következő regularizációs technikákat.
@@ -500,10 +499,8 @@ A két mérőszám közös jellemzője, hogy mindkettő az Inception modell ált
 Az alábbi kódrészlet az ImageNet adathalmazon betanított Inception modell használatát kívánja szemléltetni a Keras segítségével. A kódrészlet első futtatásakor a modell súlyai letöltésre kerülnek és a további betöltés esetén egyből rendelkezésre fog állni.
 
 \begin{python}
-	from tensorflow.keras.applications import InceptionV3
-	
-	inception_model = InceptionV3(weights='imagenet')
-	predictions = inception_model.predict(images)
+inception_model = keras.applications.InceptionV3(weights='imagenet')
+predictions = inception_model.predict(images)
 \end{python}
 
 Az Inception modell bemenete alapértelmezett beállítások mellett egy 299x299 -es felbontású rbg színcsatornákkal rendelkező kép. A pixelértékeket normalizáltan várja a modell a $[-1, 1]$ tartományon. A modell inicializálásakor paraméterként megadhatjuk a bemenet méretét, viszont az nem lehet 75x75-nél kisebb. Ha az \texttt{include\_top} paramétert \texttt{True} értékkel állítjuk be, úgy a modell tartalmazni fogja az utolsó Dense rétegét is, amely az ImageNet súlyok alapján betanított modell esetében 1000 osztály detektálására lesz képes.
@@ -657,6 +654,18 @@ A diszkriminátor is megőrizte az eredeti felépítését, viszont a \textit{fr
 	\label{fig:dcvsmsg}
 \end{figure}
 
+A \ref{fig:dcvsmsg} ábrán megfigyelhetők az eredeti és a kibővített modell generátorainak és diszkriminátorainak hibafüggvényei. Narancssárga színnel figyelhetjük meg az újonnan bemutatott modell hibaértékeit a tanulás alatt. A tanítás előrehaladtával hajlamosabb az oszcillációra a modell, viszont ami az ábrán még megfigyelhető, hogy a hibák értéktartománya sokkal szűkebb a diszkriminátor és a generátor esetében is.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=5cm]{images/collapsed_mode.png}
+	\caption{Egy "összeomlott-mode" a generátorban}
+	\label{fig:collapsed_mode}
+\end{figure}
+
+Ezen kibővítés sem tökéletes, az egyik, AFHQ adathalmazon betanított modell esetében a képek generálása során felfigyeltem egy visszatérő képre, amelyen érdekes mintázatok jelentek meg, viszont nem hasonlít az adathalmaz egyik elemére sem. A jelenségre, a mode-collapse fejezetben is említett, lokális mode vagy összeomlott-mode-ként is hivatkozhatunk. A látens tér bizonyos tartományában mintavételezett pontokra ugyanazt a képet generálja ki a modell, viszont a további pontokat nézve nem figyelhető meg semmiféle ismétlődő mintázat vagy egyéb mode-collapse utaló anomália. A \ref{fig:collapsed_mode} ábrán látható egy példa az összeomlot-mode-ra. 
+
+A \ref{fig:msg_output} ábrán a generátor kimeneteit figyelhetjük meg $4 \times 4$-es felbontástól egészen a $64 \times 64$ felbontásokig. Ezen ábrára tekintve érthető meg igazán a technika mögötti gondolat: a globális összefüggőséget az alacsonyabb felbontások mellett betanult jellegzetességek hatására alakul ki. A magasabb felbontásokon pedig az egyes képrészek részletességeinek növelése történik.
 
 \begin{figure}[h]
 	\centering
@@ -665,8 +674,9 @@ A diszkriminátor is megőrizte az eredeti felépítését, viszont a \textit{fr
 	\label{fig:msg_output}
 \end{figure}
 
-%TODO FID mérés!
+Az eredeti és ezen új modell teljesítményének méréséhez az Inception Score és a Fréchet Inception Distance metrikákat alkalmaztam. A méréshez a Cifar10 és az AFHQ adathalmaz elemein tanult mély konvolúciós(DC-GAN) és Multi Scale Gradient (MSG-GAN) generátorait használtam fel. A méréshez egységesen 10000 mintát generáltam mind a négy modellhez a tanításhoz is használt normális eloszlásból kapott látens vektorokkal. A mérés eredménye az alábbi táblázatban figyelhető meg. Az IS esetében a magasabb érték jelent jobb eredményt, az FID-nál pedig az alacsonyabb eredmény jelent jobb teljesítményt. A mérés alapján az alkalmazott kiegészítés a modell javára vált.
 
+%TODO FID mérés!
 \begin{center}
 	\begin{tabular}{@{\extracolsep{6pt}} l c c c c }
 		\hline
