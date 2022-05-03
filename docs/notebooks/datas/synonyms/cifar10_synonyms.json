@@ -1,0 +1,12 @@
+{
+    "airplane": ["repülő", "repcsi", "göbzi", "repülőgép", "légibusz", "vasmadár", "légijármű"],
+    "automobile": ["autó", "gépkocsi", "gépjármű", "személygépkocsi", "személygépjármű", "automobil", "jármű", "verda", "kocsi", "gép", "járgány", "tragacs", "négykerekű"],
+    "bird": ["madár", "szárnyas", "csicsergő", "égivándor", "csirip", "csőrös"],
+    "cat": ["macska", "cica", "cicus", "cirmos", "cicamica", "kandúr", "macsi", "macsek", "cicó", "cila", "macs", "cilamila", "macskusz", "cicuska", "ciculi", "cirmi", "cicuka", "cicmic", "cic", "ciccancs", "kismacska", "mafka", "kiscica"],
+    "deer": ["szarvas", "agancsos"],
+    "dog": ["kutya", "eb", "kutyus", "kutyuli", "blöki", "véreb", "öleb", "kutyuska", "csahos", "házőrző", "kutyi", "bolhazsák", "kutyi-mutyi", "kutyuli-mutyuli", "vahúr", "négylábú", "kutyu", "kutyóka"],
+    "frog": ["béka", "breki", "varangy", "brekkencs"],
+    "horse": ["ló", "táltos", "mén", "csődör", "paci", "lovacska", "kanca", "hátasló", "paripa", "csataló", "csikó", "hátas", "cocó", "csida", "gebe", "pejkó", "patás"],
+    "ship": ["hajó", "ladik", "csónak", "sajka", "naszád", "bárka", "gálya", "yacht", "vitorlás", "kajak", "kenu", "lélekvesztő", "vízi jármű", "evezős hajó"],
+    "truck": ["kamion", "teherautó", "nyergesvontató", "tehergépkocsi"]
+}

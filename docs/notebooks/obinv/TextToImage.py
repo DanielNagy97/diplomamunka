@@ -6,14 +6,16 @@ from obinv.InputHandler import InputHandler
 from obinv.Encoder import Encoder
 from obinv.StructuredDataMaker import StructuredDataMaker
 from obinv.ImageSynthetizer import ImageSynthetizer
+from obinv.SynonymsLoader import SynonymsLoader
 
 class TextToImage(object):
-    def __init__(self, generator_path, classifier_path):
+    def __init__(self, generator_path, classifier_path, synonyms_path):
         self.generator = ModelLoader.load_model(generator_path)
         self.classifier = ModelLoader.load_model(classifier_path)
+        self.synonyms = SynonymsLoader.load_synonyms(synonyms_path)
 
         self.input_handler = InputHandler()
-        self.structured_data_maker = StructuredDataMaker(synonyms_afhq)
+        self.structured_data_maker = StructuredDataMaker(self.synonyms)
         self.encoder = Encoder()
 
         self.image_synthetizer = ImageSynthetizer(self.generator,
@@ -74,7 +76,7 @@ class TextToImage(object):
 
         axs['Classes'].grid(True, color='0.6', dashes=(5, 2, 1, 2))
 
-        axs['Classes'].plot(preds, label=["cat", "dog", "wild"])
+        axs['Classes'].plot(preds, label=self.synonyms.keys())
 
         axs['Classes'].set_ylim(bottom=0)
         axs['Classes'].legend(loc='center left', bbox_to_anchor=(1, 0.5))
@@ -97,22 +99,3 @@ class TextToImage(object):
                 interpolation="none"
             )
         plt.show()
-
-synonyms_afhq = {
-    "cat": ["macska", "cica", "cicus", "cirmos", "cicamica", "kandúr", "macsi", "macsek", "cicó", "cila", "macs", "cilamila", "macskusz", "cicuska", "ciculi", "cirmi", "cicuka", "cicmic", "cic", "ciccancs", "kismacska", "mafka", "kiscica"],
-    "dog": ["kutya", "eb", "kutyus", "kutyuli", "blöki", "véreb", "öleb", "kutyuska", "csahos", "házőrző", "kutyi", "bolhazsák", "kutyi-mutyi", "kutyuli-mutyuli", "vahúr", "négylábú", "kutyu", "kutyóka"],
-    "wild": ["vadállat", "vad", "szörny", "szörnyeteg", "fenevad", "bestia", "dúvad", "fúria"]
-}
-
-synonyms_cifar = {
-    "airplane": ["repülő", "repcsi", "göbzi", "repülőgép", "légibusz", "vasmadár", "légijármű"],
-    "automobile": ["autó", "gépkocsi", "gépjármű", "személygépkocsi", "személygépjármű", "automobil", "jármű", "verda", "kocsi", "gép", "járgány", "tragacs", "négykerekű"],
-    "bird": ["madár", "szárnyas", "csicsergő", "égivándor", "csirip", "csőrös"],
-    "cat": ["macska", "cica", "cicus", "cirmos", "cicamica", "kandúr", "macsi", "macsek", "cicó", "cila", "macs", "cilamila", "macskusz", "cicuska", "ciculi", "cirmi", "cicuka", "cicmic", "cic", "ciccancs", "kismacska", "mafka", "kiscica"],
-    "deer": ["szarvas", "agancsos"],
-    "dog": ["kutya", "eb", "kutyus", "kutyuli", "blöki", "véreb", "öleb", "kutyuska", "csahos", "házőrző", "kutyi", "bolhazsák", "kutyi-mutyi", "kutyuli-mutyuli", "vahúr", "négylábú", "kutyu", "kutyóka"],
-    "frog": ["béka", "breki", "varangy", "brekkencs"],
-    "horse": ["ló", "táltos", "mén", "csődör", "paci", "lovacska", "kanca", "hátasló", "paripa", "csataló", "csikó", "hátas", "cocó", "csida", "gebe", "pejkó", "patás"],
-    "ship": ["hajó", "ladik", "csónak", "sajka", "naszád", "bárka", "gálya", "yacht", "vitorlás", "kajak", "kenu", "lélekvesztő", "vízi jármű", "evezős hajó"],
-    "truck": ["kamion", "teherautó", "nyergesvontató", "tehergépkocsi"]
-}
