@@ -22,7 +22,6 @@ A technika megvalósításához szükségünk van egy olyan függvényre, amely 
 
 A kimenet vizsgálatára általában egy osztályozót szokás alkalmazni. A következő alfejezetben ez a módszer kerül majd bemutatásra. Viszont a bemenet optimalizálási módszere egy egyszerűbb vizsgálati stratégia mellett kerül bemutatásra az egyszerűbben érthetőség kedvéért.
 
-%TODO: A jelölések egységesítése! (nem csak erre az alfejezetre vonatkozólag!)
 A GAN $G$ generátorának bemenete egy $\vec{z} \in \mathbb{R}^{z_n}$ vektor, ahol $z_n$ általában 100 szokott lenni. Vagyis a bemeneti vektor egy $z_n$ dimenziójú tér egy pontja. A 100 dimenzióban történő keresés igen nehéz lehet a hagyományos heurisztikus módszerekkel, mint például a hegymászó módszerrel. A hegymászó optimalizáló módszer során a célfüggvényt minimalizáljuk (vagy maximalizáljuk) a pont körüli tartomány mintavételezésével, majd a megfelelő szomszédos pontra való lépéssel. A bemeneti paraméter lehet a pont kiinduló pozíciója, a lépésköz és a mintavételezés sűrűsége. A megfelelő pontosság érdekében igen sok mintára lehet szükségünk, egy sokdimenziós térben pedig igen sok minta szükséges a tér feltérképezésére. A fix lépésköz és a mintavételezés pontatlanságának hatására könnyedén lokális optimumokban ragadhat az algoritmus. Több vizsgálandó pont elszórása a térben megnövelheti az esélyét annak, hogy rátalálunk a globális optimumra is, viszont ez jelentősen megnöveli a számításigényt.
 
 A gradiens módszer vagy gradiens-süllyesztés (\textit{Gradient Descent}) egy olyan iteratív optimalizáló módszer, amely a differenciálható függvény lokális minimumának megtalására irányul. A célfüggvény elsőrendű deriváltjai igazítják el a vizsgált pontunkat a minimumhoz \cite{ruder2016overview}. A Gradiens módszer is fix lépésközökkel közelíti az optimumot, viszont ha a tér differenciálható, úgy a lépés iránya gyorsabban számolható, mint a hegymászó módszer esetében. Az optimalizálás tehát a Gradiens módszer segítségével kerül megvalósításra.
@@ -216,8 +215,6 @@ Az eljárás optimális paraméterei ebben az esetben is több tényezőtől fü
 
 A \ref{fig:collapsed_mode} ábrán is szemléltetett, a generátorban kialakuló összeomlott-mode-ok a keresési folyamat során is bosszúságot okozhatnak. Amint belépünk egy ilyen területre a keresés során, az algoritmus nem képes kilépni, hiszen az osztályozó egyszerre látja mindegyik osztály jellegzetességeit a vizsgált képen.
 
-%TODO: Input jelzése valahogy az ábrákon.
-
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=\textwidth]{images/searching-cat.png}
@@ -231,5 +228,3 @@ A \ref{fig:collapsed_mode} ábrán is szemléltetett, a generátorban kialakuló
 	\caption{Kép generálása osztály szerint (Hajó címkével)}
 	\label{fig:searching_ship}
 \end{figure}
-
-

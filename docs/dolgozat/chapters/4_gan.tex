@@ -93,8 +93,6 @@ A Generátort és a Diszkriminátort a hibafüggvények alapján kiszámolt grad
 
 A saját implementációimban az Adam optimalizáló módszert alkalmaztam. A módszer legfontosabb paramétere a \textit{learning-rate}, vagyis a tanulási mérték. A 0.0001 learning-rate érték megfelelőnek tűnt a modelljeim tanítása során.
 
-%TODO: Optimalizáló módszerek bemutatása akár egy ábrával vagy valami, hogy ez az alfejezet valahogy pontosabb legyen!
-
 Az alábbi kódrészlet segítségével inicializálhatunk egy-egy példányt az Adam optimalizálóból a generátornak és a diszkriminátornak.
 
 \begin{python}
@@ -126,8 +124,6 @@ A tanítás hossza természetesen függ az adathalmaztól és annak méretétől
 
 A TensorFlow-ban és Keras-ban történő tanítási lépés megvalósítása a következő kódrészletben figyelhető meg. A \texttt{@tf.function} annotáció segítségével jelezhetjük a TensorFlow backend-nek, hogy az annotációval ellátott függvényt fordítsa le. Az annotáció használata a kritikus, nagy erőforrás-igényű és ismétlődő számolásoknál a futásidőt csökkentheti. Az függvény első meghívásánál felállítja a függőségi vagy hívási gráfot is, ezzel is csökkentve a futásidőt.
 
-%TODO: Utána nézni ennek az annotációnak, hogy valóban fordítás történik-e vagy csak a gráfot építi fel?
-
 \begin{python}
 @tf.function
 def train_step(images):
@@ -154,9 +150,7 @@ def train_step(images):
     )
 \end{python}
 
-A tanítás ciklus függvénye az alábbi módon nézhet ki. Ehhez olyan dataset-re lesz szükségünk, amely mini-batch-eket tartalmaz. A későbbiekben láthatunk példát a dataset megfelelő összeállítására is.
-
-%TODO: Dataset összeállítása file-ból és tensorból!
+A tanítás ciklus függvénye az alábbi módon nézhet ki. Ehhez olyan dataset-re lesz szükségünk, amely mini-batch-eket tartalmaz.
 
 A tanítás Python függvény formájában a következőképpen foglalható össze:
 \begin{python}
@@ -203,6 +197,13 @@ Egyes GAN architektúrákban ez az utolsó réteg csupán a 3 színcsatornába v
 
 Végül a hiperbolikus tangens aktivációs függvény (\ref{fig:tanh}. ábra) az eredményeket a $[-1, 1]$ intervallumba transzformálja.
 
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=10cm]{images/tanh.png}
+	\caption{Hiperbolikus tangens aktivációs függvény}
+	\label{fig:tanh}
+\end{figure}
+
 Az alábbi kódrészletben látható a felvázolt generátor architektúra megvalósítása a Keras \textit{Sequential API}-ja segítségével.
 
 \begin{python}
@@ -226,18 +227,13 @@ generator = keras.Sequential([
 ])
 \end{python}
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=10cm]{images/tanh.png}
-\caption{Hiperbolikus tangens aktivációs függvény}
-\label{fig:tanh}
-\end{figure}
 
 \SubSection{Diszkriminátor}
 
 A Diszkriminátor modell lényegében egy bináris osztályozó, amely eldönti, hogy a bemenetül kapott kép valódi-e vagy hamis. A bemeneti kép konvolúciós rétegeken megy végig, kinyerve a jellegzetességeket és felállítva egy olyan belső reprezentációt, amely alapján az utolsó \textit{dense} réteg megfelelő kimenettel tud rendelkezni. A képen található mintázatokat a konvolúciós rétegek filterek segítségével tanulják meg, amelyek megadott kernelméretekben pásztázzák végig a bemenetet. Így az egyes konvolúciós rétegek kimeneteként egy olyan reprezentáció jön létre a bemeneti képről, amelyben érvényesülnek a pixeleket körülölelő további pixelek kapcsolatai is. Ezáltal az utolsó előtti réteg, a szerializáció (\textit{Flattening}) kevésbé fogja a kép tartalmára vonatkozó információt rontani. Mivel a tanítóminta képeinek pixelértékeit normalizáltuk a $[-1, 1]$ intervallumra, így a diszkriminátor a bemenetén is ilyen tulajdonságú képeket vár. A Diszkriminátor felépítésben hasonlít a Generátorhoz, lényegében annak tükörképeként képzelhetjük el. Viszont a dekonvolúciós rétegek helyett konvolúciós rétegeket alkalmazunk benne a jellegzetességek kinyerésére. Majd ha eljutunk a kívánt dimenziószámig, egy teljesen összekötött rétegben hozza meg a modell a döntést.
 
 A generátorhoz hasonlóan az alábbi kódrészlet bemutatja a felvázolt diszkriminátor Keras Sequential API-val történő megvalósítását:
+
 \begin{python}
 discriminator = keras.Sequential([
     keras.layers.Conv2D(64, (4, 4), (2, 2), "same",
@@ -292,11 +288,11 @@ Mint a kódrészletből is látható, az utolsó teljesen összekötött rétegn
 	Réteg & Aktivációs fv & Kimenet\\
 	\cline{1-1} \cline{2-2} \cline{3-3}
 	Input & - & (64, 64, 3)\\
-	(4x4)Conv & ReLU & (32, 32, 64)\\
-	(4x4)Conv & ReLU & (16, 16, 128)\\
-	(4x4)Conv & ReLU & (8, 8, 256)\\
-	(4x4)Conv & ReLU & (4, 4, 512)\\
-	(4x4)Conv & ReLU & (1, 1, 100)\\
+	(4x4) Conv & ReLU & (32, 32, 64)\\
+	(4x4) Conv & ReLU & (16, 16, 128)\\
+	(4x4) Conv & ReLU & (8, 8, 256)\\
+	(4x4) Conv & ReLU & (4, 4, 512)\\
+	(4x4) Conv & ReLU & (1, 1, 100)\\
 	Flatten & - & (100)\\
 	Dense(1) & - & (1)\\
 	\hline
@@ -392,7 +388,7 @@ Az Inception Score tehát:
 $$ \exp(\mathbb{E}_x KL(p(y|x)||p(y))).$$
 Minél magasabb ez a szám, annál jobbnak tekinthető a GAN teljesítménye.
 
-Az Inception Score hivatalos implementációja\footnote{Az Inception Score hivatalos implementációja: \url{https://github.com/openai/improved-gan/tree/master/inception\_score}.} még a TensorFlow 1-es verziójában lett megírva, viszont a 2-es verzióval futtatva is működésre lehet bírni a megfelelő importok alkalmazása mellett. A méréshez a kigenerált képekre lesz szükségünk. A dolgozatom modelljeinek méréséhez a generált képek NumPy tömbökben kerültek kimentésre. %TODO: Notebookok behivatkozása
+Az Inception Score hivatalos implementációja\footnote{Az Inception Score hivatalos implementációja: \url{https://github.com/openai/improved-gan/tree/master/inception\_score}.} még a TensorFlow 1-es verziójában lett megírva, viszont a 2-es verzióval futtatva is működésre lehet bírni a megfelelő importok alkalmazása mellett. A méréshez a kigenerált képekre lesz szükségünk. A dolgozatom modelljeinek méréséhez a generált képek NumPy tömbökben kerültek kimentésre.
 
 \SubSection{Fréchet Inception Distance}
 Az Incepton Score kiegészítésére megjelent egy másik, széles körben elfogadott teljesítménymerő technika, a Fréchet Inception Distance (FID) \cite{heusel2017gans}. Az IS nem vette figyelembe a tanítóminta statisztikáit, és ez egy igen nagy hátránya a technikának. Továbbá az IS feltételein is javítottak, hogy a mintákon megtalálható zajok is befolyásolják a végső eredményt. Az FID számolásnál az Inception modell utolsó rejtett rétegének kimenetét veszik figyelembe, amely 2048 elemű jellegvektort jelent. A mérés elvégzése előtt a GAN modell tanításához használt adathalmazon kell vizsgálatot végezni, majd a generált képek kerülnek vizsgálatra, és az így kapott értékek alapján kapjuk meg a távolságot.
@@ -654,7 +650,6 @@ Ezen kibővítés sem tökéletes. Az egyik, AFHQ adathalmazon betanított model
 
 Az eredeti és ezen új modell teljesítményének méréséhez az Inception Score és a Fréchet Inception Distance metrikákat alkalmaztam. A méréshez a Cifar10 és az AFHQ adathalmaz elemein tanult mély konvolúciós (DC-GAN) és Multi Scale Gradient (MSG-GAN) generátorait használtam fel. A méréshez egységesen 10000 mintát generáltam mind a négy modellhez a tanításhoz is használt normális eloszlásból kapott látens vektorokkal. A mérés eredménye az alábbi táblázatban figyelhető meg.
 
-%TODO FID mérés!
 \begin{center}
 	\begin{tabular}{@{\extracolsep{6pt}} l c c c c }
 		\hline
@@ -662,22 +657,10 @@ Az eredeti és ezen új modell teljesítményének méréséhez az Inception Sco
 		\cline{2-3} \cline{4-5}
 		& Cifar10 & AFHQ & Cifar10 & AFHQ\\
 		\hline
-		DC-GAN & $5.4394 \pm 0.276$ & $4.9611 \pm 0.1464$ & $11.3$ & $11.3$\\
-		MSG-GAN & $5.9588 \pm 0.1273$ & $6.0283 \pm 0.2169$ & $9.2$ & $9.2$\\
+		DC-GAN & $5.4394 \pm 0.276$ & $4.9611 \pm 0.1464$ & $51.4926$ & $635.8320$\\
+		MSG-GAN & $5.9588 \pm 0.1273$ & $6.0283 \pm 0.2169$ & $43.5502$ & $596.7116$\\
 		\hline
 	\end{tabular}
 \end{center}
-
-%dcgan cifar10
-%(5.439416, 0.20759696)
-
-%msggan cifar10
-%(5.9587755, 0.12729427)
-
-%dcgan afhq
-%(4.9610844, 0.1464256)
-
-%msggan afhq
-%(6.0283036, 0.21691017)
 
 \noindent Az IS esetében a magasabb érték jelent jobb eredményt, az FID-nál pedig az alacsonyabb eredmény jelent jobb teljesítményt. A mérés alapján az alkalmazott kiegészítés a modell előnyére vált, viszont nagymértékű javulás nem tapasztalható.
