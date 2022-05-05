@@ -1,5 +1,6 @@
 .ipynb_checkpoints
 /epochs
 /datas/afhq
+/datas/afhq64x64
 __pycache__
 generated_samples

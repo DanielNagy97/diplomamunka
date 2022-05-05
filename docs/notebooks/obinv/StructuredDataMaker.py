@@ -1,16 +1,30 @@
 from obinv.TokenHandler import TokenHandler
 
+
 class StructuredDataMaker(object):
+    """
+    StructuredDataMaker class
+    """
     def __init__(self, synonyms):
+        """
+        Initializes the class with the given synonyms
+        :param synonyms: The synonyms object as dict.
+        """
         self.synonyms = synonyms
         self.token_handler = TokenHandler()
 
     def find_classes(self, tokens, threshold):
+        """
+        Searching classes among the tokens.
+        :param tokens: The list of tokens.
+        :param threshold: The threshold value for the acceptence of the result.
+        :return: A list of dict with token_id and the found class name.
+        """
         result_classes = []
         for i in range(len(tokens)):
             for key in self.synonyms.keys():
                 match_value =\
-                    self.token_handler.find_best_match_for_token_among_tokens(
+                    self.token_handler.find_best_match_for_token(
                         tokens[i],
                         self.synonyms[key]
                     )
@@ -21,6 +35,11 @@ class StructuredDataMaker(object):
         return result_classes
 
     def find_percentage_values(self, tokens):
+        """
+        Searching percentage values among the tokens.
+        :param tokens: The list of tokens.
+        :return: A list of dict with token_id and the found value.
+        """
         res = []
         for i in range(len(tokens)):
             if "%" in tokens[i]:
@@ -31,6 +50,12 @@ class StructuredDataMaker(object):
         return res
 
     def make_dict_from_classes(self, res_classes, res_probs):
+        """
+        Creates the structured data from the given inputs.
+        :param res_classes: The previously found classes.
+        :param res_probs: The previously found probability values.
+        :return: The structured data.
+        """
         class_names = self.synonyms.keys()
         base_data = dict()
 
@@ -67,6 +92,12 @@ class StructuredDataMaker(object):
 
 
     def make_structured_data(self, tokens, threshold):
+        """
+        Calls the functions of the class in the right order.
+        :param tokens: The list of tokens.
+        :param threshold: The threshold value for the acceptence of the result.
+        :return: The structured data.
+        """
         result_classes = self.find_classes(tokens, threshold)
         result_percentages = self.find_percentage_values(tokens)
         
