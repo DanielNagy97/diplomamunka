@@ -1,7 +1,10 @@
-\Chapter{Demo}
+\Chapter{Példa futtatások}
 
 %TODO Demozás! Milyen bemenetre milyen kimenetet ad? Következtetések levonása, az összeállított csomag bemutatása
-\Aref{tab:obinv_package} táblázatban összefoglalásra kerül a dolgozat eredményiet szemléltető \texttt{obinv} python csomag tartalma.
+
+\Section{Az \texttt{obinv} csomag és használata}
+
+\Aref{tab:obinv_package}. táblázatban összefoglalásra kerül a dolgozat eredményeit szemléltető \texttt{obinv} Python csomag tartalma.
 \begin{table}[h!]
 	\centering
 	\caption{Az elkészült csomag felépítése}
@@ -46,7 +49,7 @@
 \noindent A csomag használatához a \textit{TextToImage} osztály biztosít egy egyszerű elérést, valójában elegendő csupán ezen osztályt beimportálni.
 
 Az alábbi kódrészletekben látható egy példa a csomag használatára:\\
-A csomag \textit{TextToImage} osztályát a következőképpen lehet beimportálni és példányosítani. Az osztály használatához szükségeltetik a betanított generátor, a hozzá tartozó osztályozó és a megfelelő szinonima fájl.
+A csomag \textit{TextToImage} osztályát a következőképpen lehet beimportálni és példányosítani. Az osztály használatához szükségeltetik a betanított Generátor, a hozzá tartozó osztályozó, és a megfelelő szinonima fájl.
 \begin{python}
 from obinv.TextToImage import TextToImage
 
@@ -74,49 +77,53 @@ result_noises, losses, preds, structured_data =\
     )
 \end{python}
 
-Mivel a kép generálásában a véletlenszerű tényező igen nagy, így egy bemeneti mondatra a futtatások során egymástól eltérő képek kerülnek kigenerálásra. A fenti kódrészleteket futtatva a \ref{fig:demo} ábrához hasonló figyelhető meg.
+Mivel a kép generálásában a véletlenszerű tényező igen nagy, így egy bemeneti mondatra a futtatások során egymástól eltérő képek kerülnek kigenerálásra. A fenti kódrészleteket futtatva a \ref{fig:demo}. ábrához hasonló figyelhető meg.
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=6cm]{images/demo01.png}
+	\includegraphics[width=8cm]{images/demo01.png}
 	\caption{Példa egy futtatás eredményére}
 	\label{fig:demo}
 \end{figure}
 
-Amennyiben a \texttt{generate\_image\_from\_text} függvény \texttt{show\_convergence=True} paraméter értékkel kerül futtatásra, úgy a \ref{fig:demo_convergence} ábrához hasonló kimenetet is kaphatunk. Az ábrán megfigyelhetjük, hogy a programnak milyen úton sikerült kigenerálnia a kimeneti képet. A bal felső sarokban a hibafüggvény változását figyelhetjük meg a lépések során. Jobb felső sarokban az egyes lépésekhez tartozó kigenerált képen azonosított címkék valószínűségi értékeinek változását követhetjük nyomon. Az ábra alján pedig az egyes lépésekhez tartozó generált képeket lehet megfigyelni.
+Amennyiben a \texttt{generate\_image\_from\_text} függvény \texttt{show\_convergence=True} paraméter értékkel kerül futtatásra, úgy \aref{fig:demo_convergence}. ábrához hasonló kimenetet is kaphatunk. Az ábrán megfigyelhetjük, hogy a programnak milyen úton sikerült kigenerálnia a kimeneti képet. A bal felső sarokban a hibafüggvény változását figyelhetjük meg a lépések során. Jobb felső sarokban az egyes lépésekhez tartozó kigenerált képen azonosított címkék valószínűségi értékeinek változását követhetjük nyomon. Az ábra alján pedig az egyes lépésekhez tartozó generált képeket lehet megfigyelni.
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=15cm]{images/demo01_conv.png}
+	\includegraphics[width=\textwidth]{images/demo01_conv.png}
 	\caption{A példa kép közelítése a lépésekben}
 	\label{fig:demo_convergence}
 \end{figure}
 
-A kimeneti kép jósága sok paramétertől függhet, illetve a generálás kiinduló pontja is nagymértékben befolyásolja az eredményt. Mivel a pont egy véletlenszám generátorral kerül meghatározásra, így egy megadott seed értékkel beállítható a kiinduló pont. A seed értéket a \texttt{generate\_image} függvény paramétereként lehet megadni.
+A kimeneti kép jósága sok paramétertől függhet, illetve a generálás kiinduló pontja is nagymértékben befolyásolja az eredményt. Mivel a pont egy véletlenszám generátorral kerül meghatározásra, így egy megadott \textit{seed} értékkel beállítható a kiinduló pont. A seed értéket a \texttt{generate\_image} függvény paramétereként lehet megadni.
+
+\newpage
 
 A \textit{TextToImage} osztály \texttt{generate\_image\_from\_text} függvényének paraméterei a következők:
 
 \begin{itemize}
-	\item \textbf{input\_text}: A bemeneti szöveg, amely egy leírómondat a kép tartalmára illetőleg.
-	\item \textbf{step\_size}: A gradiens keresésben alkalmazott lépésköz értéke. Default érték = \texttt{0.005}.
-	\item \textbf{momentum}: A gradiens keresés momentum értéke. Default érték = \texttt{0.9}.
-	\item \textbf{steps}: A gradiens keresés ismétlésszáma. Default érték = \texttt{21}.
-	\item \textbf{seed}: A kiinduló random pont seed értéke. Default = \texttt{None}
-	\item \textbf{image\_step}: A konvergencia ábrára rajzolt képek közti lépésköz. Default érték = \texttt{5}.
-	\item \textbf{dpi}: A kirajzolandó kimeneti képek dpi értéke. Default érték = \texttt{100}.
-	\item \textbf{verbose}: \texttt{True} érték esetén a keresés minden lépésének kimenete megjelenik. Default érték = \texttt{False}.
-	\item \textbf{show\_convergence}: \texttt{True} érték esetén kirajzolásra kerül a konvergencia ábra. Default érték = \texttt{False}.
+	\item \texttt{input\_text}: A bemeneti szöveg, amely egy leírómondat a kép tartalmára vonatkozóan.
+	\item \texttt{step\_size}: A gradiens keresésben alkalmazott lépésköz értéke. Default érték = \texttt{0.005}.
+	\item \texttt{momentum}: A gradiens keresés momentum értéke. Default érték = \texttt{0.9}.
+	\item \texttt{steps}: A gradiens keresés ismétlésszáma. Default érték = \texttt{21}.
+	\item \texttt{seed}: A kiinduló random pont seed értéke. Default = \texttt{None}.
+	\item \texttt{image\_step}: A konvergencia ábrára rajzolt képek közti lépésköz. Default érték = \texttt{5}.
+	\item \texttt{dpi}: A kirajzolandó kimeneti képek dpi értéke. Default érték = \texttt{100}.
+	\item \texttt{verbose}: \texttt{True} érték esetén a keresés minden lépésének kimenete megjelenik. Default érték = \texttt{False}.
+	\item \texttt{show\_convergence}: \texttt{True} érték esetén kirajzolásra kerül a konvergencia ábra. Default érték = \texttt{False}.
 \end{itemize}
 
 A függvénynek csupán egyetlen kötelező paramétere van, a bemeneti mondat. A további paraméterek megadása opcionális.
 
-A kódrészletben is látható, hogy a függvénynek négy visszatérési van: \texttt{result\_noises}, \texttt{losses}, \texttt{preds}, \texttt{structured\_data}. Valójában az első három érték a konvergencia ábrán megjelenítésre kerül, sorrendben: a keresés soránt talált zajok (amelyekből a képek előállíthatóak), a hiba értékek és az osztályozó kimenetei a keresés alatt. Ezen értékeket csupán az esetleges további vizsgálatok érdekében kerülnek visszatérésre. A \texttt{structured\_data} érték pedig a szöveg feldolgozás során kapott strukturált adat.
-A fenti példa futtatásra előállt strukturált adat a következő:
+A kódrészletben is látható, hogy a függvénynek négy visszatérési értéke van: \\ \texttt{result\_noises}, \texttt{losses}, \texttt{preds}, \texttt{structured\_data}. Valójában az első három érték a konvergencia ábrán megjelenítésre kerül, sorrendben: a keresés során talált zajok (amelyekből a képek előállíthatóak), a hiba értékek és az osztályozó kimenetei a keresés alatt. Ezen értékek csupán az esetleges további vizsgálatok érdekében kerülnek visszatérésre. A \texttt{structured\_data} a szöveg feldolgozás során kapott strukturált adat.
+Az említett példa futtatásra előállt strukturált adat a következő:
 \begin{verbatim}
 {'cat': 1.0, 'dog': 0.0, 'wild': 0.0}
 \end{verbatim}
 
-\Section{Példafuttatások}
+A következőkben néhány további példafuttatás paramétereit, és a kapott eredményeket láthatjuk.
+
+\Section{Második példa}
 
 \begin{verbatim}
 input_sentence = "Egy macskutyáról képszült felvétel."
@@ -127,21 +134,23 @@ steps = 21
 {'cat': 0.5, 'dog': 0.5, 'wild': 0.0}
 \end{verbatim}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=6cm]{images/demo02.png}
+	\includegraphics[width=8cm]{images/demo02.png}
 	\caption{Második példa}
 	\label{fig:demo2}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=15cm]{images/demo02_conv.png}
+	\includegraphics[width=\textwidth]{images/demo02_conv.png}
 	\caption{A második példa kép közelítése a lépésekben}
 	\label{fig:demo2_convergence}
 \end{figure}
 
-A \ref{fig:demo2} ábrán egy olyan példa figyelhető meg, amelyben kevert osztály kikeresése volt a cél. Az eredményen látható, hogy a kiinduló kép kutyaként lett osztályozva, majd a keresés során a macska osztályra jellemző tulajdonságok fokozatosan megjelennek: a kutya füle és bundájának mintázata a macska osztályból ismert tulajdonságokat veszi fel. Mindezek mellett az orr és a szemek közti foltok megmaradnak.
+\Aref{fig:demo2}. ábrán egy olyan példa figyelhető meg, amelyben kevert osztály kikeresése volt a cél. Az eredményen látható, hogy a kiinduló kép kutyaként lett osztályozva (\ref{fig:demo2_convergence}. ábra), majd a keresés során a macska osztályra jellemző tulajdonságok fokozatosan megjelennek: a kutya füle és bundájának mintázata a macska osztályból ismert tulajdonságokat veszi fel. Mindezek mellett az orr és a szemek közti foltok megmaradnak.
+
+\Section{Harmadik példa}
 
 \begin{verbatim}
 input_sentence ="Egy olyan ló, amely 20%-ban agancsos"
@@ -152,21 +161,25 @@ steps = 21
  'dog': 0.0, 'frog': 0.0, 'horse': 0.8, 'ship': 0.0, 'truck': 0.0}
 \end{verbatim}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=6cm]{images/demo03.png}
+	\includegraphics[width=8cm]{images/demo03.png}
 	\caption{Harmadik példa}
 	\label{fig:demo3}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=15cm]{images/demo03_conv.png}
+	\includegraphics[width=\textwidth]{images/demo03_conv.png}
 	\caption{A harmadik példa kép közelítése a lépésekben}
 	\label{fig:demo3_convergence}
 \end{figure}
 
-A \ref{fig:demo3} ábrán látható kimenet a \ref{fig:demo3_convergence} konvergencia görbék alapján megfelelően kigenerálódott. A köztes képeket vizsgálva valójában nem sok változás történt a kiinduló és a talált kép között. Viszont a leíró mondatnak az osztályozó szerint ezen kimeneti kép felelt meg a legjobban. A Cifar10 adathalmaz 10 darab osztálya már kisebb kihívást jelenthet ezen módszernek. A kiinduló képtől nagy mértékben függ a kimenet.
+\Aref{fig:demo3}. ábrán látható kimenet \aref{fig:demo3_convergence}. konvergencia görbék alapján megfelelően kigenerálódott. A köztes képeket vizsgálva valójában nem sok változás történt a kiinduló és a talált kép között. Viszont a leíró mondatnak az osztályozó szerint ezen kimeneti kép felelt meg a legjobban. A Cifar10 adathalmaz 10 darab osztálya már kisebb kihívást jelenthet ezen módszernek. A kiinduló képtől nagy mértékben függ a kimenet.
+
+\newpage
+
+\Section{Negyedik példa}
 
 \begin{verbatim}
 input_sentence = "Egy hajó a tengeren"
@@ -177,20 +190,22 @@ steps = 21
  'dog': 0.0, 'frog': 0.0, 'horse': 0.0, 'ship': 1.0, 'truck': 0.0}
 \end{verbatim}
 
-\begin{figure}[h]
+Az erre kapott kimeneti kép \aref{fig:demo4}. ábrán látható.
+
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=6cm]{images/demo04.png}
+	\includegraphics[width=8cm]{images/demo04.png}
 	\caption{Negyedik példa}
 	\label{fig:demo4}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=15cm]{images/demo04_conv.png}
+	\includegraphics[width=\textwidth]{images/demo04_conv.png}
 	\caption{A negyedik példa kép közelítése a lépésekben}
 	\label{fig:demo4_convergence}
 \end{figure}
 
-A \ref{fig:demo4_convergence} ábrán megfigyelhető, hogy a példában igazán hamar megtalálta a módszer a megfelelő képet, amely után már csupán igen kis mértékű változásokat eszközölt.
+\Aref{fig:demo4_convergence}. ábrán megfigyelhető, hogy a példában igazán hamar megtalálta a módszer a megfelelő képet, amely után már csupán igen kis mértékű változásokat eszközölt.
 
-A kapott végeredmények igen sok paramétertől függnek. Nem csupán a program futtatása során megadott értékek, mint a lépésköz és momentum van hatással az eredményre. Az osztályozó és a generátor tanítása is igen sok paramétertől függvényében történik és így ezen komponensek jósága kritikus a keresés szempontjából.
+A kapott végeredmények igen sok paramétertől függnek. Nem csupán a program futtatása során megadott értékek, mint a lépésköz és momentum van hatással az eredményre. Az osztályozó és a generátor tanítása is igen sok paramétertől függvényében történik, és így ezen komponensek jósága kritikus a keresés szempontjából.
