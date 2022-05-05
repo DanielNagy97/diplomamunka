@@ -1,11 +1,24 @@
 \Chapter{Bevezetés}
 
-A fejezet célja, hogy a feladatkiírásnál kicsit részletesebben bemutassa, hogy miről fog szólni a dolgozat.
-Érdemes azt részletezni benne, hogy milyen aktuális, érdekes és nehéz probléma megoldására vállalkozik a dolgozat.
+A képfeldolgozás, mint alkalmazási terület, a mély tanulási módszerek (\textit{Deep Learning}) egy kedvelt, és igen látványos része.
+A mesterséges neurális hálózatokra vonatkozó kutatások eredményei, és az aktuálisan elérhető számítási kapacitás egyre általánosabb problémák megoldását teszi lehetővé.
+Egy ilyen, közel sem triviális probléma az, hogy hogyan lehet színes képeket generálni az azokhoz rendelkezésre álló metainformációk (például kulcsszavak, szöveges leírás) alapján.
+A dolgozat ezt a problémakört hivatott körüljárni, arra megoldást találni és a kapott eredményeket bemutatni.
 
-Ez egy egy-két oldalas leírás.
-Nem kellenek bele külön szakaszok (section-ök).
-Az irodalmi háttérbe, a probléma részleteibe csak a következő fejezetben kell belemenni.
-Itt az olvasó kedvét kell meghozni a dolgozat többi részéhez.
+A dolgozat elején röviden áttekintésre kerül az objektum felismerés problémaköre, mint a direkt feladat. Ez azért fontos, mert a továbbiakban ennek inverzére keressük a megoldást, vagyis szeretnénk generálni olyan képeket, amelyen bizonyos objektumok vannak, illetve teljesülnek a képre valamilyen, alapvetően szöveges formában megadott kritériumok. A problémakör nem tekinthető újnak, ezért bemutatásra kerülnek a szakirodalomban fellelhető jelentősebb kutatások, módszerek és azok eredményei.
 
-%TODO Bevezetés megírása, miután már összeállt a dolgozat
+A feladat megoldásához elsősorban a GAN hálózatok használatára esett a választás, melynek implementálását a Tensorflow és a Keras függvénykönyvtárak segítik.
+
+Mivel gépi tanulási problémáról van szó, ezért elengedhetetlen, hogy megfelelő tanítóminták álljanak rendelkezésre. Ehhez számos mintaadathalmaz (\textit{dataset}) elérhető, melyeket szintén a 2. fejezet taglal. Ezt követi néhány futtatókörnyezettel kapcsolatos vizsgálat, mivel a gépi tanulásnál használt algoritmusok (a mély tanulási módszerek pedig különösen) nagyobb erőforrásokat igényelnek számítási kapacitás és tárigény tekintetében egyaránt.
+
+A képgeneráláshoz a bemenetet valamilyen strukturált vagy strukturálatlan szöveges jellegű adat jelenti. A harmadik fejezetben részletezésre kerül ezek feldolgozási módja, típusaik és konkrét példák a megjelenési módjukra.
+
+A megoldandó probléma szempontjából a képek generálási módjának kiemelt szerepe van. Emiatt a GAN hálózat modellje, a szükséges hibafüggvények és optimalizálási módszerek az elméleti háttérrel és az implementációs móddal együtt kifejtésre kerül majd.
+
+Külön nehézséget jelent a generált képek jóságának a megítélése. Az \textit{Inception Score} és a \textit{Fréchet Inception Distance} lesz majd alkalmas arra, hogy ezt megfelelően számszerűsíteni tudja. Érdekes problémaként említésre kerül a \textit{mode-collapse} jelenség. Ennek, és a hasonló tanítási problémák lehetséges megoldásairól regularizációs módszerek formájában esik majd szó.
+
+A mély tanulási módszerek kapcsán találkozhatunk a GAN modell különféle változataival, kibővítési lehetőségeivel. A 4. fejezetben ezekre találhatunk példákat, azok architekturális leírásával és a hálók segítségével kapott eredmények értékelésével együtt.
+
+Az 5. fejezetben egy olyan megközelítésről olvashatunk, melyben a Generátort adottnak tekintjük, és a képgenerálási problémát a megfelelő zajvektor keresésére vezetjük vissza. Ehhez a szükséges metrikák, a gradiens alapú keresési módszer egyaránt kifejtésre kerül.
+
+A dolgozat végén konkrét futtatási példákat láthatunk a hozzájuk tartozó paraméterezéssel, a kapott eredménnyel és a tanítási folyamat áttekintésével együtt.
