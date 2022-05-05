@@ -8,7 +8,7 @@ A \textit{Generative Adverserial Network} (GAN) \cite{goodfellow2014generative},
 A tanulás során két neurális hálózat versenyzik egymással: egy generátor, amelynek az a szerepe, hogy a tanítómintákhoz hasonló adatot generáljon a bemeneti zajból és egy diszkriminátor, amely egy bináris osztályozó, amely a generátor által generált adatot vizsgálja és eldönti, hogy az valódi vagy hamis.
 A tanítás során ezen két háló versenyzik egymással, együtt fejlődve. Az autoencoderhez képest a GAN-al generált képeken már nem figyelhető meg a homályosság, élesebb és fotórealisztikusabb képek generálására képes az eredmények alapján.
 
-A generátor bemenete egy zajvektor, amelyet általában Gauss- vagy egyenletes eloszlásból állítunk elő. A zajnak a terét az irodalom látens térnek is nevezi, hiszen a tanítás során a modell megtanulja, hogy ezen többdimenziós tér egyes pontjaira milyen kimenetet generáljon. Vagyis ezzel lényegében kitölti a rendelkezésre álló tér tartományait a megtanult jellegzetességekkel. A betanított generátorral, optimális esetben, ezen tér bármely pontját mintavételezve a tanítóhalmazhoz hasonló adatokat generálhatunk.
+A generátor bemenete egy zajvektor, amelyet általában Gauss- vagy egyenletes eloszlásból állítunk elő. A zajnak a terét az irodalom látens térnek is nevezi, hiszen a tanítás során a modell megtanulja, hogy ezen többdimenziós tér egyes pontjaira milyen kimenetet generáljon. Vagyis ezzel lényegében kitölti a rendelkezésre álló tér tartományait a megtanult jellegzetességekkel. A betanított generátorral, optimális esetben, ezen tér bármely pontját mintavételezve a tanítóhalmazhoz hasonló adatokat generálhatunk. A hálózatok kialakításáról \aref{fig:aevsgan}. ábra ad áttekintést.
 
 \begin{figure}[h]
 \centering
@@ -439,15 +439,13 @@ A GAN tanítása során nehézségekbe ütközhetünk. Legrosszabb esetben nem i
 A \textit{label-smoothing} az egyik legegyszerűbb regularizációs trükk, amely a neurális hálók overfitting problémáját kívánja kiküszöbölni. Ezen módszer alkalmazásához nem szükséges módosítanunk az architektúránkat, csupán a hibafüggvényt, így ez egy egészen egyszerűen implementálható technika. GAN esetében a diszkriminátor hibafüggvényét szokás módosítani oly módon, hogy a bináris keresztentrópia számolás során a valós bemeneti képek 1-es címke helyett valamennyivel alacsonyabb értéket, például 0.9-et kapnak. Ezzel a beállítással a diszkriminátor kevésbé lesz hajlamos a túlzott magabiztosságra a valós bemeneti képek esetén, teret adva a generátor fejlődésének. Ennek megvalósítása a következő Python kódrészletben látható.
 
 \begin{python}
-	def discriminator_loss(real_output, fake_output):
-	real_loss = cross_entropy(
-	tf.constant(np.full(real_output.shape, 0.9)),
-	real_output)
-	fake_loss = cross_entropy(
-	tf.constant(np.full(fake_output.shape, 0)),
-	fake_output)
-	total_loss = real_loss + fake_loss
-	return total_loss
+def discriminator_loss(real_output, fake_output):
+    real_loss = cross_entropy(
+    tf.constant(np.full(real_output.shape, 0.9)), real_output)
+    fake_loss = cross_entropy(
+    tf.constant(np.full(fake_output.shape, 0)), fake_output)
+    total_loss = real_loss + fake_loss
+    return total_loss
 \end{python}
 
 A regularizációs technikákban megfigyelhető néhány esetben egy kicsi ellentmondásosság is, például egyes technikák a diszkriminátort hátráltatják, míg mások a generátor dolgát nehezítik meg. Természetesen a problémától függ, hogy melyik módszer alkalmazható egy adott modellnél.
@@ -682,4 +680,4 @@ Az eredeti és ezen új modell teljesítményének méréséhez az Inception Sco
 %msggan afhq
 %(6.0283036, 0.21691017)
 
-\noindent Az IS esetében a magasabb érték jelent jobb eredményt, az FID-nál pedig az alacsonyabb eredmény jelent jobb teljesítményt. A mérés alapján az alkalmazott kiegészítés a modell javára vált, viszont nagymértékű javulás nem tapasztalható.
+\noindent Az IS esetében a magasabb érték jelent jobb eredményt, az FID-nál pedig az alacsonyabb eredmény jelent jobb teljesítményt. A mérés alapján az alkalmazott kiegészítés a modell előnyére vált, viszont nagymértékű javulás nem tapasztalható.

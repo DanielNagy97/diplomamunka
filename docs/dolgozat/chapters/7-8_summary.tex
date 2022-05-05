@@ -1,15 +1,35 @@
 \Chapter{Összegzés}
 
-%TODO: Összegzés megírása, miután már összeállt a dolgozat!
+A dolgozat megírása során elvégzett kutatások megerősítették, hogy egy igen komoly, szerteágazó és aktívan kutatott területről van szó. A fellelhető, a szűkebb problémakör szempontjából releváns szakirodalom összegyűjtése, rendszerezése már önmagában is kihívást jelentett. A tudományos cikkekben közölt rengeteg eshetőség közül ki kellett tudni választani a megfelelőket.
 
-Hasonló szerepe van, mint a bevezetésnek.
-Itt már múltidőben lehet beszélni.
-A szerző saját meglátása szerint kell összegezni és értékelni a dolgozat fontosabb eredményeit.
-Meg lehet benne említeni, hogy mi az ami jobban, mi az ami kevésbé jobban sikerült a tervezettnél.
-El lehet benne mondani, hogy milyen további tervek, fejlesztési lehetőségek vannak még a témával kapcsolatban.
+A vizsgálatokhoz a technológiák adottnak tekinthetők voltak, mivel gépi tanulás problémakörben a Python programozási nyelv, a Jupyter munkafüzetek, a TensorFlow és a Keras függvénykönyvtárak használata a leginkább elterjedt. Külön figyelmet kellett fordítani azonban a futtatókörnyezet megválasztására, mivel már az első vizsgálatok kapcsán kiderült, hogy azokat nem célszerű lokálisan futtatni.
+
+A képek generálásához a GAN modell tünt és bizonyult megfelelőnek. Ennek különféle változatai, paraméterezései, és az általuk kapott eredmények bemutatásra kerültek.
+
+A dolgozatban láthattunk példákat a \textit{mode-collapse} jelenségre, annak különféle eseteire. Ezt saját mérésekkel is sikerült elemezni. A kapott hibagörbéken jól kivehető az a pont, amely után a háló gyakorlatilag használhatatlanná válik.
+
+A 4. fejezetben különféle hálózati topológiát, réteg összeállítást, és a velük végzett mérések eredményeit be sikerült mutatni.
+
+Az 5. fejezetben egy olyan módszer szerepelt, amely a képgenerálást a hibavektorok terében való kereséssel oldja meg. Ehhez implementálásra került egy gradiens alapú módszer, melyet momentummal is ki sikerült egészíteni.
+
+A dolgozathoz elkészült egy \texttt{obinv} nevű Python csomag, amely összegzi, és kényelmesen elérhetővé teszi a kutatások eredményei alapján kiválasztott képgenerálási módokat.
+
+A probléma általánosságban közel sem tekinthető megoldottnak. Rengeteg további lehetőség van a hálók kialakítására, paraméterek és metrikák megválasztására vonatkozóan. Ezek már további kutatások tárgyát képezik.
 
 \Chapter{Summary}
 
-%TODO: Summary in english
+The research carried out during the writing of the dissertation confirmed that this is a difficult, diverse and actively studied research field. The collection and systematization of the available literature which is relevant to the narrower range of problems was a challenge in itself. From the many possibilities presented in the scientific articles, it was necessary to be able to choose the appropriate ones.
 
-The content of the previous chapter in english.
+The technologies for the studies, as the use of the Python programming language, Jupyter notebooks, TensorFlow, and Keras libraries are practically given, because these are the most common tools in the field of machine learning. However, special attention had to be paid to the choice of runtime environment, because the first studies have already showed that it was not advisable to run the training and simulations locally.
+
+The GAN model appeared and proved to be suitable for image generation. Many variants and parameterizations of this and their results are presented.
+
+We have seen examples of the \textit{mode-collapse} phenomenon and its various cases. This was also analyzed with own measurements. The last iteration before the network becomes practically unusable can be clearly seen in the obtained error curves.
+
+In Chapter 4, different kinds of network topologies, layer configurations, and their results were presented.
+
+Chapter 5 presents a method that solves image generation by searching in the space of noise vectors. As a possible solution, a gradient-based method was implemented, which was supplemented with a momentum.
+
+A Python package called \texttt{obinv} has been implemented as the part of this work, which summarizes and  makes conveniently available  the image generation methods which are selected based on the research results.
+
+The problem is generally far from being solved. There are plenty of other options for designing networks, choosing parameters and metrics. These are subjects of further researches.
