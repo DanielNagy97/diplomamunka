@@ -1,0 +1,5 @@
+{
+    "cat": ["macska", "cica", "cicus", "cirmos", "cicamica", "kandúr", "macsi", "macsek", "cicó", "cila", "macs", "cilamila", "macskusz", "cicuska", "ciculi", "cirmi", "cicuka", "cicmic", "cic", "ciccancs", "kismacska", "mafka", "kiscica"],
+    "dog": ["kutya", "eb", "kutyus", "kutyuli", "blöki", "véreb", "öleb", "kutyuska", "csahos", "házőrző", "kutyi", "bolhazsák", "kutyi-mutyi", "kutyuli-mutyuli", "vahúr", "négylábú", "kutyu", "kutyóka"],
+    "wild": ["vadállat", "vad", "szörny", "szörnyeteg", "fenevad", "bestia", "dúvad", "fúria"]
+}
